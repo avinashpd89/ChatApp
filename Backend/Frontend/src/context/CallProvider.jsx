@@ -20,6 +20,9 @@ export const CallProvider = ({ children }) => {
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
   const [stream, setStream] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
+  const [micActive, setMicActive] = useState(true);
+  const [cameraActive, setCameraActive] = useState(true);
   const [call, setCall] = useState({});
   const [isCalling, setIsCalling] = useState(false);
   const [isCallRejected, setIsCallRejected] = useState(false);
@@ -38,6 +41,20 @@ export const CallProvider = ({ children }) => {
     audioRef.current = new Audio(RingingSound);
     audioRef.current.loop = true;
   }, []);
+
+  // Update local video when stream changes
+  useEffect(() => {
+    if (myVideo.current && stream) {
+      myVideo.current.srcObject = stream;
+    }
+  }, [stream]);
+
+  // Update remote video when remoteStream changes
+  useEffect(() => {
+    if (userVideo.current && remoteStream) {
+      userVideo.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
 
   useEffect(() => {
     if (call.isReceivingCall && !callAccepted && !isCallRejected) {
@@ -74,6 +91,7 @@ export const CallProvider = ({ children }) => {
         setIsCalling(false);
         setCallAccepted(false);
         setCall({});
+        setRemoteStream(null);
         if (connectionRef.current) {
           connectionRef.current.destroy();
         }
@@ -84,7 +102,7 @@ export const CallProvider = ({ children }) => {
         window.location.reload();
       });
     }
-  }, [socket]);
+  }, [socket, stream]);
 
   const startLocalStream = async (video = true) => {
     try {
@@ -93,13 +111,32 @@ export const CallProvider = ({ children }) => {
         audio: true,
       });
       setStream(currentStream);
-      if (myVideo.current) {
-        myVideo.current.srcObject = currentStream;
-      }
+      setCameraActive(video);
+      setMicActive(true);
       return currentStream;
     } catch (error) {
       console.error("Error accessing media devices:", error);
       alert("Could not access camera/microphone");
+    }
+  };
+
+  const toggleMic = () => {
+    if (stream) {
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setMicActive(audioTrack.enabled);
+      }
+    }
+  };
+
+  const toggleCamera = () => {
+    if (stream) {
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setCameraActive(videoTrack.enabled);
+      }
     }
   };
 
@@ -131,9 +168,7 @@ export const CallProvider = ({ children }) => {
 
     peer.on("stream", (remoteStream) => {
       console.log("Received remote stream");
-      if (userVideo.current) {
-        userVideo.current.srcObject = remoteStream;
-      }
+      setRemoteStream(remoteStream);
     });
 
     socket.on("callAccepted", (signal) => {
@@ -160,9 +195,8 @@ export const CallProvider = ({ children }) => {
     });
 
     peer.on("stream", (remoteStream) => {
-      if (userVideo.current) {
-        userVideo.current.srcObject = remoteStream;
-      }
+      console.log("Received remote stream in answerCall");
+      setRemoteStream(remoteStream);
     });
 
     peer.signal(call.signal);
@@ -195,6 +229,7 @@ export const CallProvider = ({ children }) => {
     setIsCalling(false);
     setCallAccepted(false);
     setCall({});
+    setRemoteStream(null);
 
     if (connectionRef.current) {
       connectionRef.current.destroy();
@@ -218,6 +253,11 @@ export const CallProvider = ({ children }) => {
         myVideo,
         userVideo,
         stream,
+        remoteStream,
+        micActive,
+        cameraActive,
+        toggleMic,
+        toggleCamera,
         callEnded,
         isCalling,
         callUser,
