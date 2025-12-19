@@ -16,17 +16,17 @@ const CallInterface = () => {
     myVideo,
     userVideo,
     stream,
-    remoteStream,
-    micActive,
-    cameraActive,
-    toggleMic,
-    toggleCamera,
+    name,
     callEnded,
     leaveCall,
     answerCall,
     isCalling,
     rejectCall,
     isCallRejected,
+    toggleMic,
+    toggleCamera,
+    isMuted,
+    isCameraOff,
   } = useCall();
 
   // Only render if there is an active interaction
@@ -83,21 +83,12 @@ const CallInterface = () => {
         <div className="w-full h-full flex flex-col items-center justify-center p-4">
           <div className="relative w-full max-w-6xl h-[85vh] bg-black rounded-lg overflow-hidden flex items-center justify-center shadow-2xl border border-gray-800">
             {/* Remote Video - Main Screen */}
-            {remoteStream ? (
-              <video
-                playsInline
-                ref={userVideo}
-                autoPlay
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center text-gray-500">
-                <div className="w-32 h-32 bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-4xl">{call.name?.[0] || "?"}</span>
-                </div>
-                <p>Waiting for video...</p>
-              </div>
-            )}
+            <video
+              playsInline
+              ref={userVideo}
+              autoPlay
+              className="w-full h-full object-contain"
+            />
 
             {/* Local Video - Picture in Picture */}
             <div className="absolute top-4 right-4 w-64 h-48 bg-gray-900 shadow-xl border-2 border-gray-700 rounded-xl overflow-hidden">
@@ -109,37 +100,38 @@ const CallInterface = () => {
                 className="w-full h-full object-cover"
               />
             </div>
+          </div>
 
-            {/* Controls Overlay */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center space-x-6 bg-gray-900 bg-opacity-80 p-4 rounded-full border border-gray-700 backdrop-blur-sm">
-              <button
-                onClick={toggleMic}
-                className={`btn btn-circle ${
-                  micActive ? "btn-ghost" : "btn-error"
-                } text-white`}>
-                {micActive ? (
-                  <MdMic className="text-2xl" />
-                ) : (
-                  <MdMicOff className="text-2xl" />
-                )}
-              </button>
-              <button
-                onClick={toggleCamera}
-                className={`btn btn-circle ${
-                  cameraActive ? "btn-ghost" : "btn-error"
-                } text-white`}>
-                {cameraActive ? (
-                  <MdVideocam className="text-2xl" />
-                ) : (
-                  <MdVideocamOff className="text-2xl" />
-                )}
-              </button>
-              <button
-                onClick={leaveCall}
-                className="btn btn-error btn-circle text-white">
-                <MdCallEnd className="text-2xl" />
-              </button>
-            </div>
+          <div className="mt-6 flex space-x-6 items-center">
+            <button
+              onClick={toggleMic}
+              className={`btn btn-circle btn-lg ${
+                isMuted ? "btn-error" : "btn-neutral"
+              }`}>
+              {isMuted ? (
+                <MdMicOff className="text-2xl" />
+              ) : (
+                <MdMic className="text-2xl" />
+              )}
+            </button>
+
+            <button
+              onClick={toggleCamera}
+              className={`btn btn-circle btn-lg ${
+                isCameraOff ? "btn-error" : "btn-neutral"
+              }`}>
+              {isCameraOff ? (
+                <MdVideocamOff className="text-2xl" />
+              ) : (
+                <MdVideocam className="text-2xl" />
+              )}
+            </button>
+
+            <button
+              onClick={leaveCall}
+              className="btn btn-error text-white rounded-full px-8 h-12 flex items-center gap-2">
+              <MdCallEnd className="text-xl" /> End Call
+            </button>
           </div>
         </div>
       )}
