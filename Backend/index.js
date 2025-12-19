@@ -13,10 +13,10 @@ import { app, server as socketServer } from "./SocketIO/server.js";
 dotenv.config();
 
 // middleware
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 app.use(cors());
-
 
 app.use("/api/user", userRoute);
 app.use("/api/message", messageRoute);
@@ -30,7 +30,6 @@ if (process.env.NODE_ENV === "production") {
         res.sendFile(path.resolve(dirPath, "./Frontend/dist", "index.html"));
     })
 }
-
 
 mongoose
     .connect(process.env.MONGODB_URI)

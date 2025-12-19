@@ -6,7 +6,7 @@ import useGetSocketMessage from "../../context/useGetSocketMessage.jsx";
 
 function Messages() {
   const { loading, message } = useGetMessage();
-  useGetSocketMessage()  // listing incoming messages
+  useGetSocketMessage(); // listing incoming messages
   console.log(message);
 
   const lastMsgRef = useRef();
@@ -21,9 +21,7 @@ function Messages() {
   }, [message]);
 
   return (
-    <div
-      className="flex-1 overflow-y-auto"
-      style={{ minHeight: "calc(92vh - 8vh)" }}>
+    <div className="flex-1 overflow-y-auto">
       {loading ? (
         <Loading />
       ) : message.length > 0 ? (
