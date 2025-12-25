@@ -280,15 +280,25 @@ export const removeContact = async (req, res) => {
     try {
         const { contactId } = req.body; // userId of the contact to remove
         const currentUser = await User.findById(req.user._id);
+        const otherUser = await User.findById(contactId);
 
-        if (!currentUser) {
+        if (!currentUser || !otherUser) {
             return res.status(404).json({ error: "User not found" });
         }
 
-        // Filter out the contact
+        // Filter out the contact from current user
         currentUser.contacts = currentUser.contacts.filter(c => c.userId.toString() !== contactId);
 
+        // Filter out current user from other user's contacts
+        otherUser.contacts = otherUser.contacts.filter(c => c.userId.toString() !== currentUser._id.toString());
+
+        // Delete the conversation between them
+        await Conversation.findOneAndDelete({
+            members: { $all: [currentUser._id, otherUser._id], $size: 2 }
+        });
+
         await currentUser.save();
+        await otherUser.save();
         res.status(200).json({ message: "Contact removed successfully" });
     } catch (error) {
         console.log("Error in removeContact: " + error);
