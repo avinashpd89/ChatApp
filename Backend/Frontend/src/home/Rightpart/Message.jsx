@@ -47,33 +47,40 @@ function Message({ message }) {
       <div className="p-4 group">
         <div className={`chat ${chatName} min-w-0 overflow-hidden`}>
           <div
-            className={`chat-bubble ${chatColor} break-words max-w-[90%] md:max-w-[70%]`}>
-            {message.messageType === "text" ? (
-              renderMessageContent(message.message, itsMe)
-            ) : message.messageType === "image" ? (
+            className={`chat-bubble ${chatColor} break-words max-w-[90%] md:max-w-[70%] ${
+              message.messageType === "image" ||
+              message.messageType === "video" ||
+              message.message.startsWith("data:image") ||
+              message.message.startsWith("data:video")
+                ? "p-0 overflow-hidden"
+                : ""
+            }`}>
+            {message.messageType === "image" ? (
               <img
                 src={message.message}
                 alt="sent image"
-                className="max-w-xs rounded-lg"
+                className="max-w-full rounded-lg"
               />
             ) : message.messageType === "video" ? (
               <video
                 src={message.message}
                 controls
-                className="max-w-xs rounded-lg"
+                className="max-w-full rounded-lg"
               />
             ) : message.message.startsWith("data:image") ? (
               <img
                 src={message.message}
                 alt="sent image"
-                className="max-w-xs rounded-lg"
+                className="max-w-full rounded-lg"
               />
             ) : message.message.startsWith("data:video") ? (
               <video
                 src={message.message}
                 controls
-                className="max-w-xs rounded-lg"
+                className="max-w-full rounded-lg"
               />
+            ) : message.messageType === "text" ? (
+              renderMessageContent(message.message, itsMe)
             ) : (
               message.message
             )}
