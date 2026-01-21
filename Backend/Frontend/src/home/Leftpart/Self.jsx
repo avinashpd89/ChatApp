@@ -117,7 +117,7 @@ function Self() {
 
   return (
     <>
-      <div className="bg-base-100 h-16 md:h-[10vh] p-2 flex items-center justify-between duration-300 border-t border-base-300/20 flex-shrink-0">
+      <div className="sticky bottom-0 z-50 bg-base-100 h-[10vh] p-2 flex items-center justify-between duration-300 border-t border-base-300/20 flex-shrink-0">
         <div
           className="flex items-center space-x-3 cursor-pointer hover:bg-base-200 p-2 rounded-lg transition-colors"
           onClick={() => setIsProfileModalOpen(true)}>

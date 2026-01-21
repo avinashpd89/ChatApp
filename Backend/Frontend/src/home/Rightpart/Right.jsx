@@ -11,7 +11,7 @@ function Right() {
     return setSelectedConversation(null);
   }, [setSelectedConversation]);
   return (
-    <div className="w-full bg-base-200 text-base-content h-full flex flex-col min-w-0 overflow-x-hidden">
+    <div className="w-full bg-base-200 text-base-content h-screen md:h-full flex flex-col min-w-0 overflow-x-hidden">
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {!selectedConversation ? (
           <NoChatSelected />
