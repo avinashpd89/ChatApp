@@ -137,7 +137,7 @@ function Typesend() {
   }, [showPicker]);
 
   return (
-    <div className="w-full relative z-50">
+    <div className="w-full relative z-50 flex-shrink-0">
       {/* File Preview Modal */}
       {previewFile && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
