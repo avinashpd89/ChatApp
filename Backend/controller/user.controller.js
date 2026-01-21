@@ -1,4 +1,3 @@
-import { io } from "../SocketIO/server.js";
 import User from "../models/user.model.js";
 import Conversation from "../models/conversation.model.js";
 import bcrypt from "bcrypt";
@@ -186,21 +185,15 @@ export const updateUser = async (req, res) => {
         if (profilepic) user.profilepic = profilepic;
         if (publicKey) user.publicKey = publicKey;
         await user.save();
-
-        const updatedUserResponse = {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            profilepic: user.profilepic,
-            publicKey: user.publicKey
-        };
-
-        // Broadcast update to all connected users
-        io.emit("userUpdated", updatedUserResponse);
-
         res.status(200).json({
             message: "User updated successfully",
-            user: updatedUserResponse
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                profilepic: user.profilepic,
+                publicKey: user.publicKey
+            }
         });
     } catch (error) {
         console.log("Error in updateUser Controller: " + error);

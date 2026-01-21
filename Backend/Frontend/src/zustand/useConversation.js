@@ -24,13 +24,7 @@ const useConversation = create(
                 }
             },
             users: [],
-            setUsers: (users) => {
-                if (typeof users === 'function') {
-                    set((state) => ({ users: users(state.users) }));
-                } else {
-                    set({ users });
-                }
-            },
+            setUsers: (users) => set({ users }),
             groups: [],
             setGroups: (groups) => {
                 if (typeof groups === 'function') {
