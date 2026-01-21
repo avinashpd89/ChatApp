@@ -158,8 +158,8 @@ function Chatuser() {
     : selectedConversation.profilepic;
 
   return (
-    <div className="sticky top-0 z-50 bg-base-100 border-b border-base-300/20 shadow-sm flex-shrink-0">
-      <div className="flex items-center justify-between h-[8vh] px-5 duration-300">
+    <div className="relative z-50">
+      <div className="flex items-center justify-between h-[8vh] bg-base-100 px-5 duration-300 border-b border-base-300/20">
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setSelectedConversation(null)}
