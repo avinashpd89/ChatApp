@@ -145,20 +145,21 @@ export const CallProvider = ({ children }) => {
     const onExistingParticipants = ({ participants }) => {
       console.log("Received existing participants:", participants);
       // Create peer connections to all existing participants
+      // New joiners should NOT be initiators - wait for existing participants to send offers
       participants.forEach((participant) => {
         createPeerConnection(
           participant.socketId,
           participant.userId,
           participant.name,
-          true,
+          false,
         );
       });
     };
 
     const onUserJoinedCall = ({ socketId, userId, name }) => {
       console.log(`User ${name} joined the call`);
-      // Create peer connection to the new joiner (we are not the initiator)
-      createPeerConnection(socketId, userId, name, false);
+      // Create peer connection to the new joiner (we ARE the initiator since we're already in the call)
+      createPeerConnection(socketId, userId, name, true);
     };
 
     const onPeerSignal = ({ signal, callerId, callerName, socketId }) => {
