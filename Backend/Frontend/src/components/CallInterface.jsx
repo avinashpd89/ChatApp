@@ -128,32 +128,26 @@ const CallInterface = () => {
             // GROUP CALL UI - Grid Layout
             <div className="w-full h-full flex flex-col">
               <div
-                className={`flex-1 grid gap-2 md:gap-4 p-2 md:p-4 auto-rows-fr ${
-                  peers.length + 1 <= 1
-                    ? "grid-cols-1"
-                    : peers.length + 1 === 2
-                      ? "grid-cols-1 md:grid-cols-2"
-                      : peers.length + 1 <= 4
-                        ? "grid-cols-2"
-                        : peers.length + 1 <= 6
-                          ? "grid-cols-2 md:grid-cols-3"
-                          : peers.length + 1 <= 9
-                            ? "grid-cols-3"
-                            : "grid-cols-3 md:grid-cols-4"
-                }`}
+                className="flex-1 grid gap-2 md:gap-4 p-2 md:p-4 auto-rows-fr"
                 style={{
                   maxHeight: "calc(100vh - 180px)",
+                  gridTemplateColumns:
+                    peers.length === 0
+                      ? "1fr"
+                      : peers.length + 1 === 2
+                        ? "repeat(2, 1fr)"
+                        : peers.length + 1 === 3
+                          ? "repeat(2, 1fr)" // Change to 2 columns for 3 people
+                          : peers.length + 1 <= 4
+                            ? "repeat(2, 1fr)"
+                            : peers.length + 1 <= 6
+                              ? "repeat(3, 1fr)"
+                              : "repeat(4, 1fr)",
                   gridAutoRows: "minmax(0, 1fr)",
                 }}>
                 {/* Local Video */}
                 <div
-                  className={`relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700 aspect-video ${
-                    (peers.length + 1) % 2 !== 0 &&
-                    peers.length + 1 >= 3 &&
-                    peers.length === 0
-                      ? "col-span-1 md:col-span-1"
-                      : ""
-                  }`}
+                  className="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700 aspect-video"
                   style={{ minHeight: "120px" }}>
                   {call.callType === "video" ? (
                     <video
@@ -180,18 +174,11 @@ const CallInterface = () => {
 
                 {/* Remote Participants */}
                 {peers.map((peer, index) => {
-                  const totalParticipants = peers.length + 1;
-                  // Special case for 3 participants: 2 top, 1 bottom centered (span 2)
-                  let spanClass = "";
-                  if (totalParticipants === 3 && index === 1) {
-                    spanClass =
-                      "col-span-2 md:col-span-2 w-full md:w-3/4 mx-auto";
-                  }
-
+                  const isThirdInThree = peers.length + 1 === 3 && index === 1;
                   return (
                     <div
                       key={peer.peerId}
-                      className={`relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700 aspect-video ${spanClass}`}
+                      className={`relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700 aspect-video ${isThirdInThree ? "col-span-2 w-1/2 mx-auto" : ""}`}
                       style={{ minHeight: "120px" }}>
                       <video
                         playsInline
