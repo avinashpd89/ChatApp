@@ -133,17 +133,21 @@ const CallInterface = () => {
                   gridTemplateColumns:
                     peers.length === 0
                       ? "1fr"
-                      : peers.length === 1
+                      : peers.length + 1 === 2
                         ? "repeat(2, 1fr)"
-                        : peers.length <= 4
+                        : peers.length + 1 <= 4
                           ? "repeat(2, 1fr)"
-                          : "repeat(3, 1fr)",
+                          : peers.length + 1 <= 6
+                            ? "repeat(3, 1fr)"
+                            : "repeat(4, 1fr)",
                   gridTemplateRows:
-                    peers.length <= 2
+                    peers.length + 1 <= 2
                       ? "1fr"
-                      : peers.length <= 4
+                      : peers.length + 1 <= 4
                         ? "repeat(2, 1fr)"
-                        : "repeat(3, 1fr)",
+                        : peers.length + 1 <= 9
+                          ? "repeat(3, 1fr)"
+                          : "repeat(4, 1fr)",
                 }}>
                 {/* Local Video */}
                 <div className="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700">
