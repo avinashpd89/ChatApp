@@ -128,7 +128,7 @@ const CallInterface = () => {
             // GROUP CALL UI - Grid Layout
             <div className="w-full h-full flex flex-col">
               <div
-                className="flex-1 grid gap-4 p-4"
+                className="flex-1 grid gap-2 md:gap-4 p-2 md:p-4 auto-rows-fr"
                 style={{
                   maxHeight: "calc(100vh - 180px)",
                   gridTemplateColumns:
@@ -143,17 +143,12 @@ const CallInterface = () => {
                             : peers.length + 1 <= 6
                               ? "repeat(3, 1fr)"
                               : "repeat(4, 1fr)",
-                  gridTemplateRows:
-                    peers.length + 1 <= 3
-                      ? "1fr"
-                      : peers.length + 1 <= 4
-                        ? "repeat(2, 1fr)"
-                        : peers.length + 1 <= 9
-                          ? "repeat(3, 1fr)"
-                          : "repeat(4, 1fr)",
+                  gridAutoRows: "minmax(0, 1fr)",
                 }}>
                 {/* Local Video */}
-                <div className="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700">
+                <div
+                  className="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700 aspect-video"
+                  style={{ minHeight: "120px" }}>
                   {call.callType === "video" ? (
                     <video
                       playsInline
@@ -181,7 +176,8 @@ const CallInterface = () => {
                 {peers.map((peer) => (
                   <div
                     key={peer.peerId}
-                    className="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700">
+                    className="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700 aspect-video"
+                    style={{ minHeight: "120px" }}>
                     <video
                       playsInline
                       autoPlay

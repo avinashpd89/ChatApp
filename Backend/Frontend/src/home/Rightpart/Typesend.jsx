@@ -4,6 +4,7 @@ import { BsEmojiSmile } from "react-icons/bs";
 import { GrAttachment } from "react-icons/gr"; // Import Attachment Icon
 import useSendMessage from "../../context/useSendMessage.jsx";
 import EmojiPicker from "emoji-picker-react";
+import useConversation from "../../zustand/useConversation.js";
 
 import { HiDocumentText } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
@@ -13,6 +14,7 @@ function Typesend() {
   const [showPicker, setShowPicker] = useState(false);
   const [previewFile, setPreviewFile] = useState(null); // { data, type, name }
   const { loading, sendMessages } = useSendMessage();
+  const { selectedConversation } = useConversation();
   const pickerRef = useRef(null);
   const fileInputRef = useRef(null); // Ref for file input
   const [pickerWidth, setPickerWidth] = useState(350); // Default width
@@ -34,6 +36,16 @@ function Typesend() {
   }, []);
 
   const inputRef = useRef(null);
+
+  // Auto-focus input when a chat is selected (for mobile keyboard)
+  useEffect(() => {
+    if (selectedConversation && inputRef.current) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [selectedConversation]);
 
   // Restore focus to input after loading completes
   useEffect(() => {
