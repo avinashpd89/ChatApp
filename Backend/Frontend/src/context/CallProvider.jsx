@@ -30,7 +30,7 @@ export const CallProvider = ({ children }) => {
   // Group call state
   const [isGroupCall, setIsGroupCall] = useState(false);
   const [groupCallRoom, setGroupCallRoom] = useState(null);
-  const [peers, setPeers] = useState([]); // Array of { peerId, stream, name }
+  const [peers, setPeers] = useState([]); // Array of { peerId, stream, name, userId }
 
   // Auth info for caller name
   const [authUser] = useAuth();
@@ -42,8 +42,9 @@ export const CallProvider = ({ children }) => {
   const connectionRef = useRef();
   const audioRef = useRef();
 
-  // For group calls: Map of peerId -> Peer instance
-  const peersRef = useRef({});
+  // Refs for checking state inside socket listeners (fixing stale closures)
+  const streamRef = useRef(null);
+  const peersRef = useRef({}); // Map of socketId -> Peer Object
 
   useEffect(() => {
     audioRef.current = new Audio(RingingSound);
@@ -69,7 +70,7 @@ export const CallProvider = ({ children }) => {
     }
   }, [call.isReceivingCall, callAccepted, isCallRejected]);
 
-  // Stable Socket Listeners
+  // Main Socket Listeners - Defined once to avoid re-binding issues
   useEffect(() => {
     if (!socket) return;
 
@@ -100,8 +101,6 @@ export const CallProvider = ({ children }) => {
       if (connectionRef.current) {
         console.log("Signaling peer with acceptance data");
         connectionRef.current.signal(signal);
-      } else {
-        console.warn("Connection ref is null when callAccepted received");
       }
     };
 
@@ -125,6 +124,7 @@ export const CallProvider = ({ children }) => {
       callType,
       callerName,
       callerId,
+      participants,
     }) => {
       console.log(
         `Received group call invitation from ${callerName} for room ${roomId}`,
@@ -136,6 +136,7 @@ export const CallProvider = ({ children }) => {
         callType,
         name: callerName,
         from: callerId,
+        participants,
       });
       setIsCallRejected(false);
       setCallAccepted(false);
@@ -145,28 +146,37 @@ export const CallProvider = ({ children }) => {
     const onExistingParticipants = ({ participants }) => {
       console.log("Received existing participants:", participants);
       // Create peer connections to all existing participants
-      // New joiners should NOT be initiators - wait for existing participants to send offers
       participants.forEach((participant) => {
         createPeerConnection(
           participant.socketId,
           participant.userId,
           participant.name,
-          false,
+          true, // initiator
         );
       });
     };
 
     const onUserJoinedCall = ({ socketId, userId, name }) => {
       console.log(`User ${name} joined the call`);
-      // Create peer connection to the new joiner (we ARE the initiator since we're already in the call)
-      createPeerConnection(socketId, userId, name, true);
+      createPeerConnection(socketId, userId, name, false);
     };
 
     const onPeerSignal = ({ signal, callerId, callerName, socketId }) => {
-      console.log(`Received signal from peer ${callerName}`);
+      // console.log(`Received signal from peer ${callerName} (${socketId})`);
       const peer = peersRef.current[socketId];
       if (peer) {
         peer.signal(signal);
+      } else {
+        console.log(
+          "Peer not found for signal, creating non-initiator peer",
+          socketId,
+        );
+        createPeerConnection(socketId, callerId, callerName, false);
+        // Then signal after a brief tick to ensure peer is created
+        setTimeout(() => {
+          if (peersRef.current[socketId])
+            peersRef.current[socketId].signal(signal);
+        }, 0);
       }
     };
 
@@ -201,11 +211,17 @@ export const CallProvider = ({ children }) => {
       socket.off("peer-signal", onPeerSignal);
       socket.off("user-left-call", onUserLeftCall);
     };
-  }, [socket]); // Only depend on socket
+  }, [socket]);
 
+  // Helper to create peer connection using REF for stream
   const createPeerConnection = (socketId, userId, name, initiator) => {
-    if (!stream) {
-      console.warn("No local stream available for peer connection");
+    if (!streamRef.current) {
+      console.warn("No local stream available for peer connection to", name);
+      return;
+    }
+
+    if (peersRef.current[socketId]) {
+      console.log(`Peer connection to ${name} (${socketId}) already exists.`);
       return;
     }
 
@@ -214,12 +230,11 @@ export const CallProvider = ({ children }) => {
     const peer = new Peer({
       initiator,
       trickle: false,
-      stream: stream,
+      stream: streamRef.current, // USE REF HERE
       config: iceConfig,
     });
 
     peer.on("signal", (signal) => {
-      console.log(`Sending signal to ${socketId}`);
       socket.emit("signal-to-peer", {
         targetSocketId: socketId,
         signal,
@@ -231,8 +246,7 @@ export const CallProvider = ({ children }) => {
     peer.on("stream", (remoteStream) => {
       console.log(`Received stream from ${name}`);
       setPeers((prev) => {
-        const existing = prev.find((p) => p.peerId === socketId);
-        if (existing) {
+        if (prev.some((p) => p.peerId === socketId)) {
           return prev.map((p) =>
             p.peerId === socketId ? { ...p, stream: remoteStream } : p,
           );
@@ -269,15 +283,18 @@ export const CallProvider = ({ children }) => {
     setPeers([]);
 
     // Destroy all peer connections
-    Object.values(peersRef.current).forEach((peer) => peer.destroy());
+    Object.values(peersRef.current).forEach((peer) => {
+      if (peer) peer.destroy();
+    });
     peersRef.current = {};
 
     if (connectionRef.current) {
       connectionRef.current.destroy();
       connectionRef.current = null;
     }
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
       setStream(null);
     }
   };
@@ -285,7 +302,6 @@ export const CallProvider = ({ children }) => {
   // Effect to safely attach remote stream when video element is ready
   useEffect(() => {
     if (remoteStream && userVideo.current) {
-      console.log("Attaching remote stream to video element");
       userVideo.current.srcObject = remoteStream;
     }
   }, [remoteStream, callAccepted, callEnded]);
@@ -293,7 +309,6 @@ export const CallProvider = ({ children }) => {
   // Effect to safely attach local stream when video element is ready
   useEffect(() => {
     if (stream && myVideo.current) {
-      console.log("Attaching local stream to video element");
       myVideo.current.srcObject = stream;
     }
   }, [stream, callAccepted, isCalling]);
@@ -302,9 +317,6 @@ export const CallProvider = ({ children }) => {
     iceServers: [
       { urls: "stun:stun.l.google.com:19302" },
       { urls: "stun:stun1.l.google.com:19302" },
-      { urls: "stun:stun2.l.google.com:19302" },
-      { urls: "stun:stun3.l.google.com:19302" },
-      { urls: "stun:stun4.l.google.com:19302" },
     ],
   };
 
@@ -315,13 +327,15 @@ export const CallProvider = ({ children }) => {
         audio: true,
       });
       setStream(currentStream);
+      streamRef.current = currentStream; // UPDATE REF
+
       if (myVideo.current) {
         myVideo.current.srcObject = currentStream;
       }
       return currentStream;
     } catch (error) {
       console.error("Error accessing media devices:", error);
-      alert("Could not access camera/microphone");
+      toast.error("Could not access camera/microphone");
     }
   };
 
