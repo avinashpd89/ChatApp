@@ -242,7 +242,7 @@ const CallInterface = () => {
 
                 <button
                   onClick={leaveCall}
-                  className="btn btn-error text-white rounded-full px-8 h-12 flex items-center gap-2">
+                  className="btn btn-error text-white rounded-full px-8 h-12 flex md:hidden items-center gap-2">
                   <MdCallEnd className="text-xl" /> End Call
                 </button>
               </div>
@@ -330,7 +330,7 @@ const CallInterface = () => {
 
               <button
                 onClick={leaveCall}
-                className="btn btn-error text-white rounded-full px-8 h-12 flex items-center gap-2">
+                className="btn btn-error text-white rounded-full px-8 h-12 flex md:hidden items-center gap-2">
                 <MdCallEnd className="text-xl" /> End Call
               </button>
             </div>
