@@ -126,22 +126,25 @@ const CallInterface = () => {
         <div className="w-full h-full flex flex-col items-center justify-center p-4">
           {isGroupCall ? (
             // GROUP CALL UI - Grid Layout
-            <div className="w-full h-[85vh] flex flex-col">
+            <div className="w-full h-full flex flex-col">
               <div
                 className="flex-1 grid gap-4 p-4"
                 style={{
+                  maxHeight: "calc(100vh - 180px)",
                   gridTemplateColumns:
                     peers.length === 0
                       ? "1fr"
                       : peers.length + 1 === 2
                         ? "repeat(2, 1fr)"
-                        : peers.length + 1 <= 4
-                          ? "repeat(2, 1fr)"
-                          : peers.length + 1 <= 6
-                            ? "repeat(3, 1fr)"
-                            : "repeat(4, 1fr)",
+                        : peers.length + 1 === 3
+                          ? "repeat(3, 1fr)"
+                          : peers.length + 1 <= 4
+                            ? "repeat(2, 1fr)"
+                            : peers.length + 1 <= 6
+                              ? "repeat(3, 1fr)"
+                              : "repeat(4, 1fr)",
                   gridTemplateRows:
-                    peers.length + 1 <= 2
+                    peers.length + 1 <= 3
                       ? "1fr"
                       : peers.length + 1 <= 4
                         ? "repeat(2, 1fr)"
