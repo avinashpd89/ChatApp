@@ -175,18 +175,17 @@ const CallInterface = () => {
                   <div
                     key={peer.peerId}
                     className="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700">
-                    {call.callType === "video" ? (
-                      <video
-                        playsInline
-                        autoPlay
-                        ref={(el) => {
-                          if (el && peer.stream) {
-                            el.srcObject = peer.stream;
-                          }
-                        }}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
+                    <video
+                      playsInline
+                      autoPlay
+                      ref={(el) => {
+                        if (el && peer.stream) {
+                          el.srcObject = peer.stream;
+                        }
+                      }}
+                      className={`w-full h-full object-cover ${call.callType === "audio" ? "hidden" : ""}`}
+                    />
+                    {call.callType === "audio" && (
                       <div className="w-full h-full flex items-center justify-center bg-gray-800">
                         <div className="text-center">
                           <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
