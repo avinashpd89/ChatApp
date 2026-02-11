@@ -147,7 +147,7 @@ const CallInterface = () => {
                 }}>
                 {/* Local Video */}
                 <div
-                  className="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700 aspect-video"
+                  className="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700 aspect-video md:aspect-auto md:h-full"
                   style={{ minHeight: "120px" }}>
                   {call.callType === "video" ? (
                     <video
@@ -178,7 +178,7 @@ const CallInterface = () => {
                   return (
                     <div
                       key={peer.peerId}
-                      className={`relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700 aspect-video ${isThirdInThree ? "col-span-2 w-1/2 mx-auto" : ""}`}
+                      className={`relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700 aspect-video md:aspect-auto md:h-full ${isThirdInThree ? "col-span-2 w-1/2 mx-auto" : ""}`}
                       style={{ minHeight: "120px" }}>
                       <video
                         playsInline
