@@ -24,7 +24,13 @@ const useConversation = create(
                 }
             },
             users: [],
-            setUsers: (users) => set({ users }),
+            setUsers: (users) => {
+                if (typeof users === 'function') {
+                    set((state) => ({ users: users(state.users) }));
+                } else {
+                    set({ users });
+                }
+            },
             groups: [],
             setGroups: (groups) => {
                 if (typeof groups === 'function') {
@@ -46,13 +52,13 @@ const useConversation = create(
                     }
                 }));
             },
-            updateLastMessage: (userId, text, time) => {
+            updateLastMessage: (userId, text, time, timestamp) => {
                 if (!userId) return;
                 const idStr = userId.toString();
                 set((state) => ({
                     lastMessages: {
                         ...(state.lastMessages || {}),
-                        [idStr]: { text, time }
+                        [idStr]: { text, time, timestamp }
                     }
                 }));
             },
