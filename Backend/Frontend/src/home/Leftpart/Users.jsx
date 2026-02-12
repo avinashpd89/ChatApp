@@ -39,7 +39,7 @@ function Users({ filterType = "all" }) {
 
   return (
     <div>
-      <h1 className="px-8 py-2 text-base-content font-semibold bg-base-200 rounded-md flex items-center justify-between">
+      <h1 className="px-4 py-2 text-base-content font-semibold bg-base-200 rounded-md flex items-center justify-between">
         <span>Messages</span>
       </h1>
       <div className="py-2">
