@@ -17,7 +17,7 @@ const io = new Server(server, {
 
 // realtime message
 export const getReceiverSocketId = (receiverId) => {
-    return users[receiverId]
+    return users[receiverId] ? users[receiverId][0] : null;
 }
 
 const users = {}
@@ -29,8 +29,13 @@ io.on("connection", (socket) => {
     console.log("a user connected", socket.id);
     const userId = socket.handshake.query.userId;
     if (userId) {
-        users[userId] = socket.id
-        console.log("Hello", users)
+        if (!users[userId]) {
+            users[userId] = [];
+        }
+        if (!users[userId].includes(socket.id)) {
+            users[userId].push(socket.id);
+        }
+        console.log("User connected:", userId, "Sockets:", users[userId]);
     }
     // used to send the events to all connected users
     io.emit("getOnlineUsers", Object.keys(users));
@@ -82,7 +87,7 @@ io.on("connection", (socket) => {
         if (!isAlreadyInRoom) {
             groupCalls[roomId].push({ socketId: socket.id, userId, name });
         }
-        
+
         socket.join(roomId);
 
         // Notify all online group members about the call
@@ -113,14 +118,14 @@ io.on("connection", (socket) => {
         // Check if user is already in the room to avoid duplicates
         const existingParticipantIndex = groupCalls[roomId].findIndex(p => p.socketId === socket.id);
         if (existingParticipantIndex !== -1) {
-             // Update info if needed, or just warn
-             console.log(`User ${userId} already in room ${roomId}, updating info.`);
-             groupCalls[roomId][existingParticipantIndex] = { socketId: socket.id, userId, name };
+            // Update info if needed, or just warn
+            console.log(`User ${userId} already in room ${roomId}, updating info.`);
+            groupCalls[roomId][existingParticipantIndex] = { socketId: socket.id, userId, name };
         } else {
-             // Add new participant to room
-             groupCalls[roomId].push({ socketId: socket.id, userId, name });
+            // Add new participant to room
+            groupCalls[roomId].push({ socketId: socket.id, userId, name });
         }
-        
+
         socket.join(roomId);
 
         // Get OTHER participants to connect to
@@ -174,7 +179,16 @@ io.on("connection", (socket) => {
     // used to listen client side events emitted by server side (server & client)
     socket.on("disconnect", () => {
         console.log("a user disconnected", socket.id);
-        delete users[userId];
+
+        if (userId && users[userId]) {
+            users[userId] = users[userId].filter(id => id !== socket.id);
+            if (users[userId].length === 0) {
+                delete users[userId];
+                console.log("User fully offline:", userId);
+            } else {
+                console.log("User still has other tabs open:", userId, "Remaining sockets:", users[userId]);
+            }
+        }
 
         // Remove from any active group calls
         Object.keys(groupCalls).forEach(roomId => {

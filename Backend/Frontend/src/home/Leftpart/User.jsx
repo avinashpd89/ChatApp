@@ -14,7 +14,9 @@ function User({ user }) {
   const { unreadCounts } = useNotifications();
   const [authUser] = useAuth();
 
-  const inOnline = onlineUsers.includes(user._id);
+  const inOnline = onlineUsers.some(
+    (id) => id.toString() === user._id?.toString(),
+  );
   const unreadCount = unreadCounts[user._id?.toString()] || 0;
 
   const { lastMessages } = useConversation();

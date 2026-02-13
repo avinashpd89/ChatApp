@@ -147,7 +147,10 @@ function Chatuser() {
     if (selectedConversation.isGroup) {
       return `${selectedConversation.members?.length || 0} members`;
     }
-    return onlineUsers && onlineUsers.includes(userId) ? "Online" : "Offline";
+    return onlineUsers &&
+      onlineUsers.some((id) => id.toString() === userId?.toString())
+      ? "Online"
+      : "Offline";
   };
 
   const displayName = selectedConversation.isGroup
@@ -170,7 +173,9 @@ function Chatuser() {
             className={`avatar ${
               !selectedConversation.isGroup &&
               onlineUsers &&
-              onlineUsers.includes(selectedConversation._id)
+              onlineUsers.some(
+                (id) => id.toString() === selectedConversation._id?.toString(),
+              )
                 ? "online"
                 : ""
             }`}>

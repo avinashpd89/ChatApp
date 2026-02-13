@@ -20,9 +20,10 @@ export const SocketProvider = ({ children }) => {
     if (authUser) {
       // Determine the socket URL based on the environment
       const SOCKET_URL =
-        window.location.hostname === "localhost"
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
           ? "http://localhost:4001"
-          : "https://chatapp-ryiv.onrender.com";
+          : window.location.origin;
 
       const socket = io(SOCKET_URL, {
         query: {
