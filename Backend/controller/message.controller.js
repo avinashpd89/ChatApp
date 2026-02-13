@@ -123,27 +123,35 @@ export const sendMessage = async (req, res) => {
                         io.to(socketId).emit("newMessage", newMessage);
                     } else {
                         // OFFLINE: Send Push Notification
+                        // OFFLINE: Send Push Notification
                         try {
-                            const subscription = await Subscription.findOne({ userId: memberId });
-                            if (subscription) {
-                                const payload = JSON.stringify({
-                                    title: conversation.groupName, // Group Name as title
-                                    body: `${req.user.fullname}: ${messageType === 'text' ? message : 'Sent an attachment'}`, // "User: Message"
-                                    icon: conversation.groupProfilePic || "/vite.svg",
-                                    badge: "/vite.svg", // Monochrome icon for status bar
-                                    tag: conversation._id.toString(), // Group by Group ID
-                                    data: {
-                                        url: `/?conversation=${conversation._id}`,
-                                        chatId: conversation._id
+                            const subscriptions = await Subscription.find({ userId: memberId });
+                            const notificationPromises = subscriptions.map(async (subscription) => {
+                                try {
+                                    const payload = JSON.stringify({
+                                        title: conversation.groupName, // Group Name as title
+                                        body: `${req.user.fullname}: ${messageType === 'text' ? message : 'Sent an attachment'}`, // "User: Message"
+                                        icon: conversation.groupProfilePic || "/vite.svg",
+                                        badge: "/vite.svg", // Monochrome icon for status bar
+                                        tag: conversation._id.toString(), // Group by Group ID
+                                        data: {
+                                            url: `/?conversation=${conversation._id}`,
+                                            chatId: conversation._id
+                                        }
+                                    });
+                                    await webpush.sendNotification(subscription, payload);
+                                } catch (err) {
+                                    console.log("Error sending push to", memberIdStr, err.message);
+                                    if (err.statusCode === 410) {
+                                        await Subscription.deleteOne({ _id: subscription._id });
                                     }
-                                });
-                                await webpush.sendNotification(subscription, payload);
-                            }
+                                }
+                            });
+                            
+                            await Promise.all(notificationPromises);
+                            
                         } catch (err) {
-                            console.log("Error sending push to", memberIdStr, err.message);
-                            if (err.statusCode === 410) {
-                                await Subscription.deleteOne({ userId: memberId });
-                            }
+                            console.log("Error fetching subscriptions for", memberIdStr, err.message);
                         }
                     }
                 }
@@ -156,27 +164,36 @@ export const sendMessage = async (req, res) => {
             } else {
                 // OFFLINE: Send Push Notification
                 try {
-                    const subscription = await Subscription.findOne({ userId: targetId });
-                    if (subscription) {
+                    const subscriptions = await Subscription.find({ userId: targetId });
+                    
+                    if (subscriptions.length > 0) {
                         const sender = await User.findById(senderId).select("fullname profilepic");
-                        const payload = JSON.stringify({
-                            title: sender ? sender.fullname : 'New Message',
-                            body: messageType === 'text' ? message : 'Sent an attachment',
-                            icon: (sender && sender.profilepic) || "/vite.svg",
-                            badge: "/vite.svg",
-                            tag: targetId, // Group by Sender ID (Conversation ID)
-                            data: {
-                                url: `/?conversation=${targetId}`, // Or senderId if 1-to-1 doesn't have conversation ID in URL
-                                chatId: targetId
+                        const notificationPromises = subscriptions.map(async (subscription) => {
+                            try {
+                                const payload = JSON.stringify({
+                                    title: sender ? sender.fullname : 'New Message',
+                                    body: messageType === 'text' ? message : 'Sent an attachment',
+                                    icon: (sender && sender.profilepic) || "/vite.svg",
+                                    badge: "/vite.svg",
+                                    tag: targetId, // Group by Sender ID (Conversation ID)
+                                    data: {
+                                        url: `/?conversation=${targetId}`, // Or senderId if 1-to-1 doesn't have conversation ID in URL
+                                        chatId: targetId
+                                    }
+                                });
+                                await webpush.sendNotification(subscription, payload);
+                            } catch (err) {
+                                console.log("Error sending push notification to", targetId, err.message);
+                                if (err.statusCode === 410) {
+                                    await Subscription.deleteOne({ _id: subscription._id });
+                                }
                             }
                         });
-                        await webpush.sendNotification(subscription, payload);
+
+                        await Promise.all(notificationPromises);
                     }
                 } catch (err) {
-                    console.log("Error sending push notification to", targetId, err.message);
-                    if (err.statusCode === 410) {
-                        await Subscription.deleteOne({ userId: targetId });
-                    }
+                    console.log("Error fetching subscriptions for", targetId, err.message);
                 }
             }
         }
