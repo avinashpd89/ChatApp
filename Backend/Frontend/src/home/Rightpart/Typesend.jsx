@@ -35,11 +35,15 @@ function Typesend() {
 
   const inputRef = useRef(null);
 
-  // Restore focus to input after loading completes
+  // Track previous loading state to avoid autofocus on mount
+  const prevLoading = useRef(loading);
+
+  // Restore focus to input ONLY after loading completes (message sent)
   useEffect(() => {
-    if (!loading && inputRef.current) {
+    if (!loading && prevLoading.current && inputRef.current) {
       inputRef.current.focus();
     }
+    prevLoading.current = loading;
   }, [loading]);
 
   const handleSubmit = async (e) => {

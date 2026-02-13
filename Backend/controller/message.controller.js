@@ -147,9 +147,9 @@ export const sendMessage = async (req, res) => {
                                     }
                                 }
                             });
-                            
+
                             await Promise.all(notificationPromises);
-                            
+
                         } catch (err) {
                             console.log("Error fetching subscriptions for", memberIdStr, err.message);
                         }
@@ -165,7 +165,7 @@ export const sendMessage = async (req, res) => {
                 // OFFLINE: Send Push Notification
                 try {
                     const subscriptions = await Subscription.find({ userId: targetId });
-                    
+
                     if (subscriptions.length > 0) {
                         const sender = await User.findById(senderId).select("fullname profilepic");
                         const notificationPromises = subscriptions.map(async (subscription) => {
@@ -574,6 +574,70 @@ export const deleteGroup = async (req, res) => {
 
     } catch (error) {
         console.log("Error in deleteGroup", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+export const removeMember = async (req, res) => {
+    try {
+        const { id: conversationId } = req.params;
+        const { userId: memberToRemoveId } = req.body;
+        const requesterId = req.user._id;
+
+        const conversation = await Conversation.findById(conversationId);
+
+        if (!conversation) {
+            return res.status(404).json({ error: "Group not found" });
+        }
+
+        if (!conversation.isGroup) {
+            return res.status(400).json({ error: "This is not a group conversation" });
+        }
+
+        // Check if requester is admin
+        if (conversation.groupAdmin.toString() !== requesterId.toString()) {
+            return res.status(403).json({ error: "Only the group admin can remove members" });
+        }
+
+        // Prevent admin from removing themselves (should use leaveGroup)
+        if (memberToRemoveId === requesterId.toString()) {
+            return res.status(400).json({ error: "Admins cannot remove themselves. Use 'Leave Group' instead." });
+        }
+
+        // Check if user is in the group
+        if (!conversation.members.includes(memberToRemoveId)) {
+            return res.status(400).json({ error: "User is not a member of this group" });
+        }
+
+        // Remove member
+        conversation.members = conversation.members.filter(
+            member => member.toString() !== memberToRemoveId
+        );
+
+        await conversation.save();
+
+        // Populate members to get fresh list for socket events
+        await conversation.populate("members", "-password");
+
+        // Notify all current members + the removed member
+        // We need to notify the removed member so their UI updates (removes the group)
+        // The conversation.members list no longer has the removed member, so we notify them separately.
+
+        const membersToNotify = [...conversation.members.map(m => m._id.toString()), memberToRemoveId];
+
+        membersToNotify.forEach(memberId => {
+            const socketId = getReceiverSocketId(memberId);
+            if (socketId) {
+                // If it's the removed member, we could send a specific 'removedFromGroup' event, 
+                // or just 'groupUpdated' and let frontend handle it (if user not in members, remove from list)
+                io.to(socketId).emit("groupUpdated", conversation);
+            }
+        });
+
+        res.status(200).json(conversation);
+
+    } catch (error) {
+        console.log("Error in removeMember", error);
         res.status(500).json({ error: "Internal server error" });
     }
 };

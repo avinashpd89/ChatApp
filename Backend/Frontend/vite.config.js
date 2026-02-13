@@ -1,8 +1,7 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -12,16 +11,26 @@ export default defineConfig({
       buffer: true,
     }),
   ],
+
   define: {
-    global: 'window', // Keep this as backup or remove if polyfill handles it
+    global: "window",
   },
+
   server: {
+    host: "0.0.0.0",   // 🔥 Allow mobile + external access
     port: 3001,
+
+    cors: true,        // 🔥 Prevent CORS issues
+
     proxy: {
       "/api": {
         target: "http://localhost:4001",
         changeOrigin: true,
-      }
-    }
-  }
-})
+      },
+      "/socket.io": {   // 🔥 If using socket.io in your chat app
+        target: "http://localhost:4001",
+        ws: true,
+      },
+    },
+  },
+});

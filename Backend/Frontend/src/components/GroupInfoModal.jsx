@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import useConversation from "../zustand/useConversation.js";
 import { useAuth } from "../context/Authprovider.jsx";
 import { FaCamera } from "react-icons/fa";
 import { IoPersonAdd } from "react-icons/io5";
+import ConfirmationModal from "./ConfirmationModal";
 
 const GroupInfoModal = ({ onClose, group }) => {
   const [authUser] = useAuth();
@@ -26,6 +28,10 @@ const GroupInfoModal = ({ onClose, group }) => {
   // Profile View State - now holds the URL or null
   const [viewProfilePhoto, setViewProfilePhoto] = useState(null);
 
+  // Remove Member Confirmation State
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState(null);
+
   useEffect(() => {
     if (isAddingMember) {
       const fetchAvailableContacts = async () => {
@@ -34,7 +40,7 @@ const GroupInfoModal = ({ onClose, group }) => {
           // Filter out users already in the group
           const existingMemberIds = new Set(group.members.map((m) => m._id));
           const filtered = res.data.filter(
-            (user) => !existingMemberIds.has(user._id)
+            (user) => !existingMemberIds.has(user._id),
           );
           setAvailableContacts(filtered);
         } catch (error) {
@@ -98,20 +104,43 @@ const GroupInfoModal = ({ onClose, group }) => {
     }
   };
 
+  const handleRemoveMemberClick = (userId, userName) => {
+    setMemberToRemove({ id: userId, name: userName });
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!memberToRemove) return;
+
+    try {
+      const res = await axios.put(`/api/message/remove-member/${group._id}`, {
+        userId: memberToRemove.id,
+      });
+      const updatedGroup = res.data;
+      updateLocalGroup(updatedGroup);
+      toast.success("Member removed successfully");
+      setConfirmModalOpen(false);
+      setMemberToRemove(null);
+    } catch (error) {
+      console.error("Error removing member", error);
+      toast.error(error.response?.data?.error || "Failed to remove member");
+    }
+  };
+
   const updateLocalGroup = (updatedGroup) => {
     const updatedGroups = groups.map((g) =>
-      g._id === updatedGroup._id ? updatedGroup : g
+      g._id === updatedGroup._id ? updatedGroup : g,
     );
     setGroups(updatedGroups);
     setSelectedConversation(updatedGroup);
   };
 
   const filteredContacts = availableContacts.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999] p-4">
       <div className="bg-base-100 w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="bg-primary p-4 text-primary-content flex justify-between items-center shrink-0">
@@ -194,7 +223,7 @@ const GroupInfoModal = ({ onClose, group }) => {
                     } else {
                       // View group profile
                       setViewProfilePhoto(
-                        groupProfilePic || "PLACEHOLDER_GROUP"
+                        groupProfilePic || "PLACEHOLDER_GROUP",
                       );
                     }
                   }}>
@@ -249,9 +278,7 @@ const GroupInfoModal = ({ onClose, group }) => {
                   {/* Members List */}
                   <div className="w-full max-h-40 overflow-y-auto bg-base-200 rounded-box p-2 mt-2">
                     <div className="flex items-center justify-between px-2 mb-2">
-                      <h4 className="text-xs font-bold opacity-50">
-                        MEMBERS
-                      </h4>
+                      <h4 className="text-xs font-bold opacity-50">MEMBERS</h4>
                       {group.members.length < 50 && (
                         <button
                           onClick={() => setIsAddingMember(true)}
@@ -265,13 +292,13 @@ const GroupInfoModal = ({ onClose, group }) => {
                     {group.members.map((member) => (
                       <div
                         key={member._id}
-                        className="flex items-center gap-3 p-2 hover:bg-base-300 rounded-lg cursor-default">
+                        className="flex items-center gap-3 p-2 hover:bg-base-300 rounded-lg cursor-default group/member">
                         <div
                           className="avatar cursor-pointer hover:ring-2 hover:ring-primary rounded-full transition-all"
                           onClick={() =>
                             setViewProfilePhoto(
                               member.profilepic ||
-                                "https://avatar.iran.liara.run/public/boy"
+                                "https://avatar.iran.liara.run/public/boy",
                             )
                           }>
                           <div className="w-8 rounded-full">
@@ -299,6 +326,18 @@ const GroupInfoModal = ({ onClose, group }) => {
                               <span className="badge badge-xs badge-primary shrink-0">
                                 Admin
                               </span>
+                            )}
+                            {isAdmin && member._id !== authUser.user._id && (
+                              <button
+                                onClick={() =>
+                                  handleRemoveMemberClick(
+                                    member._id,
+                                    member.name,
+                                  )
+                                }
+                                className="btn btn-xs btn-error text-white opacity-0 group-hover/member:opacity-100 transition-opacity">
+                                Remove
+                              </button>
                             )}
                           </div>
                         </div>
@@ -358,7 +397,7 @@ const GroupInfoModal = ({ onClose, group }) => {
       {/* Full Screen Profile View */}
       {viewProfilePhoto && (
         <div
-          className="fixed inset-0 z-[60] bg-black bg-opacity-90 flex items-center justify-center p-4 cursor-pointer"
+          className="fixed inset-0 z-[1001] bg-black bg-opacity-90 flex items-center justify-center p-4 cursor-pointer"
           onClick={() => setViewProfilePhoto(null)}>
           <div className="relative max-w-2xl w-full max-h-[90vh] flex items-center justify-center">
             {viewProfilePhoto !== "PLACEHOLDER_GROUP" ? (
@@ -375,7 +414,21 @@ const GroupInfoModal = ({ onClose, group }) => {
           </div>
         </div>
       )}
-    </div>
+
+      {/* Confirmation Modal for Removing Member */}
+      <ConfirmationModal
+        isOpen={confirmModalOpen}
+        onClose={() => {
+          setConfirmModalOpen(false);
+          setMemberToRemove(null);
+        }}
+        onConfirm={handleConfirmRemove}
+        title="Remove Member"
+        message={`Are you sure you want to remove ${memberToRemove?.name} from the group?`}
+        confirmText="Remove"
+      />
+    </div>,
+    document.body,
   );
 };
 

@@ -45,18 +45,37 @@ export const SocketProvider = ({ children }) => {
       // Listen for group updates
       socket.on("groupUpdated", (updatedGroup) => {
         console.log("Socket: Group updated", updatedGroup);
-        // Update the group in the groups array
-        setGroups((prevGroups) =>
-          prevGroups.map((g) =>
-            g._id === updatedGroup._id ? updatedGroup : g,
-          ),
+
+        const isMember = updatedGroup.members.some(
+          (member) => member._id === authUser.user._id,
         );
 
-        // Update selected conversation if it matches
-        const { selectedConversation, setSelectedConversation } =
-          useConversation.getState();
-        if (selectedConversation?._id === updatedGroup._id) {
-          setSelectedConversation(updatedGroup);
+        if (isMember) {
+          // Update the group in the groups array
+          setGroups((prevGroups) =>
+            prevGroups.map((g) =>
+              g._id === updatedGroup._id ? updatedGroup : g,
+            ),
+          );
+
+          // Update selected conversation if it matches
+          const { selectedConversation, setSelectedConversation } =
+            useConversation.getState();
+          if (selectedConversation?._id === updatedGroup._id) {
+            setSelectedConversation(updatedGroup);
+          }
+        } else {
+          // User was removed from group, remove from list
+          setGroups((prevGroups) =>
+            prevGroups.filter((g) => g._id !== updatedGroup._id),
+          );
+
+          const { selectedConversation, setSelectedConversation } =
+            useConversation.getState();
+          if (selectedConversation?._id === updatedGroup._id) {
+            setSelectedConversation(null);
+            toast.error("You have been removed from the group");
+          }
         }
       });
 
