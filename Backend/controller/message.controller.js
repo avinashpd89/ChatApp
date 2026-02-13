@@ -127,15 +127,23 @@ export const sendMessage = async (req, res) => {
                             const subscription = await Subscription.findOne({ userId: memberId });
                             if (subscription) {
                                 const payload = JSON.stringify({
-                                    title: `New Message in ${conversation.groupName}`,
-                                    body: messageType === 'text' ? message : 'Sent an attachment',
-                                    icon: "/vite.svg", // Replace with app icon
-                                    url: `/?conversation=${conversation._id}`
+                                    title: conversation.groupName, // Group Name as title
+                                    body: `${req.user.fullname}: ${messageType === 'text' ? message : 'Sent an attachment'}`, // "User: Message"
+                                    icon: conversation.groupProfilePic || "/vite.svg",
+                                    badge: "/vite.svg", // Monochrome icon for status bar
+                                    tag: conversation._id.toString(), // Group by Group ID
+                                    data: {
+                                        url: `/?conversation=${conversation._id}`,
+                                        chatId: conversation._id
+                                    }
                                 });
                                 await webpush.sendNotification(subscription, payload);
                             }
                         } catch (err) {
-                            console.log("Error sending push notification to group member", memberIdStr, err.message);
+                            console.log("Error sending push to", memberIdStr, err.message);
+                            if (err.statusCode === 410) {
+                                await Subscription.deleteOne({ userId: memberId });
+                            }
                         }
                     }
                 }
@@ -150,17 +158,25 @@ export const sendMessage = async (req, res) => {
                 try {
                     const subscription = await Subscription.findOne({ userId: targetId });
                     if (subscription) {
-                        const sender = await User.findById(senderId).select("fullname");
+                        const sender = await User.findById(senderId).select("fullname profilepic");
                         const payload = JSON.stringify({
-                            title: `New Message from ${sender ? sender.fullname : 'Someone'}`,
+                            title: sender ? sender.fullname : 'New Message',
                             body: messageType === 'text' ? message : 'Sent an attachment',
-                            icon: "/vite.svg",
-                            url: `/?conversation=${targetId}`
+                            icon: (sender && sender.profilepic) || "/vite.svg",
+                            badge: "/vite.svg",
+                            tag: targetId, // Group by Sender ID (Conversation ID)
+                            data: {
+                                url: `/?conversation=${targetId}`, // Or senderId if 1-to-1 doesn't have conversation ID in URL
+                                chatId: targetId
+                            }
                         });
                         await webpush.sendNotification(subscription, payload);
                     }
                 } catch (err) {
                     console.log("Error sending push notification to", targetId, err.message);
+                    if (err.statusCode === 410) {
+                        await Subscription.deleteOne({ userId: targetId });
+                    }
                 }
             }
         }

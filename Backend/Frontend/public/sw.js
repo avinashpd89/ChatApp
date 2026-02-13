@@ -5,12 +5,13 @@ self.addEventListener('push', function (event) {
         const options = {
             body: data.body,
             icon: data.icon || '/vite.svg',
-            badge: '/vite.svg', // Optional: badge for mobile status bar
-            vibrate: [100, 50, 100],
+            badge: data.badge || '/vite.svg',
+            vibrate: [200, 100, 200], // Vibration pattern
+            tag: data.tag, // Group notifications by conversation
+            renotify: true, // Vibrate even if another notification with same tag is open
             data: {
-                dateOfArrival: Date.now(),
-                primaryKey: '2',
-                url: data.url
+                url: data.data?.url || '/',
+                chatId: data.data?.chatId
             }
         };
         event.waitUntil(
@@ -23,20 +24,26 @@ self.addEventListener('notificationclick', function (event) {
     console.log('Notification click received.');
     event.notification.close();
 
+    const urlToOpen = event.notification.data.url;
+
     // Open the app or focus the window
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
-            // If the user has the app open, focus on it
+            // Check if window is already open
             for (let i = 0; i < clientList.length; i++) {
                 let client = clientList[i];
+                // Check if the URL matches (simplistic check, can be improved)
                 if (client.url && 'focus' in client) {
+                    // Optionally navigate the client if needed, or just focus
+                    if (urlToOpen && client.navigate) {
+                        client.navigate(urlToOpen);
+                    }
                     return client.focus();
                 }
             }
             // If app is closed, open it
             if (clients.openWindow) {
-                // Use the URL from the notification data, or root if not present
-                return clients.openWindow(event.notification.data.url || '/');
+                return clients.openWindow(urlToOpen || '/');
             }
         })
     );

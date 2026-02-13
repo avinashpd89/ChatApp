@@ -24,7 +24,26 @@ const NotificationHandler = () => {
 
 function App() {
   const [authUser, setAuthUser] = useAuth();
-  const { selectedConversation } = useConversation();
+  const { selectedConversation, setSelectedConversation, users, groups } =
+    useConversation();
+
+  // Deep Linking Handler
+  React.useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const chatId = query.get("conversation");
+
+    if (chatId && (users.length > 0 || groups.length > 0)) {
+      const foundConversation =
+        users.find((u) => u._id === chatId) ||
+        groups.find((g) => g._id === chatId);
+
+      if (foundConversation) {
+        setSelectedConversation(foundConversation);
+        // Optional: Clean URL but keep history to not break back button if needed
+        // window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [users, groups, setSelectedConversation]);
 
   return (
     <>
