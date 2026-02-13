@@ -1,5 +1,6 @@
+
+import "dotenv/config";
 import express from "express";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -7,10 +8,9 @@ import path from "path";
 
 import userRoute from "./routes/user.route.js";
 import messageRoute from "./routes/message.route.js";
+import notificationRoute from "./routes/notification.route.js";
 import { app, server as socketServer } from "./SocketIO/server.js";
 
-
-dotenv.config();
 
 // middleware
 app.use(express.json({ limit: '50mb' }));
@@ -20,6 +20,7 @@ app.use(cors());
 
 app.use("/api/user", userRoute);
 app.use("/api/message", messageRoute);
+app.use("/api/notifications", notificationRoute);
 
 // code for deployment
 if (process.env.NODE_ENV === "production") {
@@ -41,5 +42,5 @@ mongoose
     });
 
 const server = socketServer.listen(process.env.PORT, () => {
-    console.log(`Server Started on Port ${process.env.PORT}`);
+    console.log(`Server Started on Port ${process.env.PORT} `);
 }); 

@@ -14,9 +14,11 @@ import OfflineMessageNotification from "./components/OfflineMessageNotification"
 import useConversation from "./zustand/useConversation";
 
 import useGetSocketMessage from "./context/useGetSocketMessage";
+import useWebPush from "./hooks/useWebPush";
 
 const NotificationHandler = () => {
   useGetSocketMessage();
+  useWebPush();
   return null;
 };
 

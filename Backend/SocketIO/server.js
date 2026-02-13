@@ -7,10 +7,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "https://chatapp-ryiv.onrender.com",
+        origin: [
+            "https://chatapp-ryiv.onrender.com",
+            "http://localhost:3001"
+        ],
         methods: ["GET", "POST"],
     }
-})
+});
 
 // realtime message
 export const getReceiverSocketId = (receiverId) => {

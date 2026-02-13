@@ -2,6 +2,17 @@ import { getReceiverSocketId, io } from "../SocketIO/server.js";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.models.js";
 import User from "../models/user.model.js";
+import Subscription from "../models/subscription.model.js";
+import webpush from "web-push";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+webpush.setVapidDetails(
+    process.env.WEB_PUSH_EMAIL,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
 
 export const createGroup = async (req, res) => {
     try {
@@ -104,11 +115,28 @@ export const sendMessage = async (req, res) => {
 
         if (isGroupMsg) {
             // Broadcast to all group members except sender
-            conversation.members.forEach(memberId => {
-                if (memberId.toString() !== senderId.toString()) {
-                    const socketId = getReceiverSocketId(memberId.toString());
+            conversation.members.forEach(async (memberId) => {
+                const memberIdStr = memberId.toString();
+                if (memberIdStr !== senderId.toString()) {
+                    const socketId = getReceiverSocketId(memberIdStr);
                     if (socketId) {
                         io.to(socketId).emit("newMessage", newMessage);
+                    } else {
+                        // OFFLINE: Send Push Notification
+                        try {
+                            const subscription = await Subscription.findOne({ userId: memberId });
+                            if (subscription) {
+                                const payload = JSON.stringify({
+                                    title: `New Message in ${conversation.groupName}`,
+                                    body: messageType === 'text' ? message : 'Sent an attachment',
+                                    icon: "/vite.svg", // Replace with app icon
+                                    url: `/?conversation=${conversation._id}`
+                                });
+                                await webpush.sendNotification(subscription, payload);
+                            }
+                        } catch (err) {
+                            console.log("Error sending push notification to group member", memberIdStr, err.message);
+                        }
                     }
                 }
             });
@@ -117,6 +145,23 @@ export const sendMessage = async (req, res) => {
             const receiverSocketId = getReceiverSocketId(targetId);
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("newMessage", newMessage);
+            } else {
+                // OFFLINE: Send Push Notification
+                try {
+                    const subscription = await Subscription.findOne({ userId: targetId });
+                    if (subscription) {
+                        const sender = await User.findById(senderId).select("fullname");
+                        const payload = JSON.stringify({
+                            title: `New Message from ${sender ? sender.fullname : 'Someone'}`,
+                            body: messageType === 'text' ? message : 'Sent an attachment',
+                            icon: "/vite.svg",
+                            url: `/?conversation=${targetId}`
+                        });
+                        await webpush.sendNotification(subscription, payload);
+                    }
+                } catch (err) {
+                    console.log("Error sending push notification to", targetId, err.message);
+                }
             }
         }
 
@@ -520,10 +565,10 @@ export const markAsRead = async (req, res) => {
 
         // Alternative: Mark messages in a specific conversation as read
         const conversation = await Conversation.findById(conversationId);
-        
+
         if (conversation) {
             const messageIds = conversation.message;
-            
+
             // Update all messages in this conversation to isRead: true for the current user
             await Message.updateMany(
                 {

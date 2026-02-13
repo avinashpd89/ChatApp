@@ -2,9 +2,9 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./Authprovider";
 import useConversation from "../zustand/useConversation.js";
 import io from "socket.io-client";
+
 const socketContext = createContext();
 
-// it is a hook
 export const useSocketContext = () => {
   return useContext(socketContext);
 };
@@ -18,11 +18,18 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (authUser) {
-      const socket = io("https://chatapp-ryiv.onrender.com", {
+      // Determine the socket URL based on the environment
+      const SOCKET_URL =
+        window.location.hostname === "localhost"
+          ? "http://localhost:4001"
+          : "https://chatapp-ryiv.onrender.com";
+
+      const socket = io(SOCKET_URL, {
         query: {
           userId: authUser.user._id,
         },
       });
+
       setSocket(socket);
 
       socket.on("getOnlineUsers", (users) => {
@@ -44,8 +51,8 @@ export const SocketProvider = ({ children }) => {
             g._id === updatedGroup._id ? updatedGroup : g,
           ),
         );
-        // If this is the selected conversation, update it too
-        // We use getState to avoid stale closure on selectedConversation
+
+        // Update selected conversation if it matches
         const { selectedConversation, setSelectedConversation } =
           useConversation.getState();
         if (selectedConversation?._id === updatedGroup._id) {
@@ -61,12 +68,10 @@ export const SocketProvider = ({ children }) => {
           prevGroups.filter((g) => g._id !== deletedGroupId),
         );
 
-        // If this is the selected conversation, verify it matches and deselect
         const { selectedConversation, setSelectedConversation } =
           useConversation.getState();
         if (selectedConversation?._id === deletedGroupId) {
-          setSelectedConversation(null); // Return to home/empty state
-          // Optionally show a toast that the group was deleted
+          setSelectedConversation(null);
         }
       });
 
@@ -78,6 +83,7 @@ export const SocketProvider = ({ children }) => {
       }
     }
   }, [authUser]);
+
   return (
     <socketContext.Provider value={{ socket, onlineUsers }}>
       {children}
