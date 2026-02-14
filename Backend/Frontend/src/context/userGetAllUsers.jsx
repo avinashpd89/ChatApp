@@ -9,7 +9,7 @@ function userGetAllUsers() {
 
   useEffect(() => {
     const getUsers = async () => {
-      setLoading(true);
+      if (!users || users.length === 0) setLoading(true);
       try {
         const token = Cookies.get("jwt");
         const response = await axios.get("/api/user/allusers", {

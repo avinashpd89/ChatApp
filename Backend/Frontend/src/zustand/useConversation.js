@@ -75,7 +75,12 @@ const useConversation = create(
         {
             name: 'chat-metadata',
             storage: createJSONStorage(() => localStorage),
-            partialize: (state) => ({ unreadCounts: state.unreadCounts, lastMessages: state.lastMessages }),
+            partialize: (state) => ({
+                unreadCounts: state.unreadCounts,
+                lastMessages: state.lastMessages,
+                users: state.users,
+                groups: state.groups
+            }),
         }
     )
 )

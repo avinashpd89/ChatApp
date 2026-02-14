@@ -8,7 +8,7 @@ const useGetGroups = () => {
 
   useEffect(() => {
     const getGroups = async () => {
-      setLoading(true);
+      if (!groups || groups.length === 0) setLoading(true);
       try {
         const response = await axios.get("/api/user/get-groups");
         setGroups(response.data);

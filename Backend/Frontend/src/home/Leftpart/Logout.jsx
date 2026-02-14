@@ -11,6 +11,7 @@ function Logout() {
     try {
       const res = await axios.post("/api/user/logout");
       localStorage.removeItem("ChatApp");
+      localStorage.removeItem("chat-metadata");
       Cookies.remove("jwt");
       setLoading(false);
       toast.success("Logout successfully");
