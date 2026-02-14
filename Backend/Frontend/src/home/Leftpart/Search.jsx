@@ -9,8 +9,7 @@ import { MdGroupAdd } from "react-icons/md";
 import { IoPersonAdd } from "react-icons/io5";
 import GroupCreationModal from "../../components/GroupCreationModal.jsx";
 
-function Search({ onFilterChange }) {
-  const [search, setSearch] = useState("");
+function Search({ onFilterChange, searchQuery, setSearchQuery }) {
   const [isAdding, setIsAdding] = useState(false); // Toggle between Search and Add
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [addEmail, setAddEmail] = useState("");
@@ -45,13 +44,13 @@ function Search({ onFilterChange }) {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (!search) return;
+    // In live search, we might still want to select the top result on Enter
+    if (!searchQuery) return;
     const conversation = allUsers.find((user) =>
-      user.name.toLowerCase().includes(search.toLowerCase()),
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
     if (conversation) {
       setSelectedConversation(conversation);
-      setSearch("");
     } else {
       toast.error("User not found");
     }
@@ -198,8 +197,8 @@ function Search({ onFilterChange }) {
                 type="text"
                 className="grow bg-transparent outline-none text-gray-200 placeholder-gray-400 font-normal"
                 placeholder="Search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </form>

@@ -18,9 +18,7 @@ function Right() {
         ) : (
           <>
             <Chatuser />
-            <div className="flex-1 overflow-y-auto">
-              <Messages />
-            </div>
+            <Messages />
             <Typesend />
           </>
         )}

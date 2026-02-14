@@ -72,6 +72,40 @@ function Typesend() {
     }
   };
 
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    let mediaFound = false;
+    for (let i = 0; i < items.length; i++) {
+      // Detect images, GIFs, and stickers (often webp)
+      if (
+        items[i].type.indexOf("image") !== -1 ||
+        items[i].type.indexOf("video") !== -1
+      ) {
+        const file = items[i].getAsFile();
+        if (file) {
+          mediaFound = true;
+          e.preventDefault(); // Prevent Gboard from also inserting fallback text
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setPreviewFile({
+              data: reader.result,
+              type: items[i].type.startsWith("image") ? "image" : "video",
+              name:
+                file.name ||
+                (items[i].type.startsWith("image")
+                  ? `pasted-media-${Date.now()}.png`
+                  : `pasted-video-${Date.now()}.mp4`),
+            });
+          };
+          reader.readAsDataURL(file);
+          break; // Handle the first media item
+        }
+      }
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -271,8 +305,13 @@ function Typesend() {
                   placeholder="Type a message..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
+                  onPaste={handlePaste}
                   className="w-full bg-transparent border-none outline-none text-base-content text-base md:text-lg 
                              placeholder-base-content/40 py-2 md:py-3 px-1"
+                  style={{
+                    fontFamily:
+                      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
+                  }}
                   autoComplete="off"
                 />
               </div>

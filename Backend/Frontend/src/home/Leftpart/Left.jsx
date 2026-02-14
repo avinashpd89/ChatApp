@@ -5,6 +5,7 @@ import Self from "./Self.jsx";
 
 function Left() {
   const [filterType, setFilterType] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const handleFilterChange = (event) => {
@@ -17,10 +18,14 @@ function Left() {
 
   return (
     <div className="w-full h-full bg-base-300 text-base-content flex flex-col">
-      <Search onFilterChange={setFilterType} />
+      <Search
+        onFilterChange={setFilterType}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
 
       <div className="flex-1 overflow-y-auto">
-        <Users filterType={filterType} />
+        <Users filterType={filterType} searchQuery={searchQuery} />
       </div>
       <Self />
     </div>

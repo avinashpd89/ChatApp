@@ -5,7 +5,7 @@ import useConversation from "../../zustand/useConversation.js";
 import useGetGroups from "../../context/useGetGroups";
 import { useNotifications } from "../../context/NotificationContext";
 
-function Users({ filterType = "all" }) {
+function Users({ filterType = "all", searchQuery = "" }) {
   const [allUsers, loading] = userGetAllUsers();
   const [groups, loadingGroups] = useGetGroups();
   const { unreadCounts } = useNotifications();
@@ -15,6 +15,14 @@ function Users({ filterType = "all" }) {
 
   // Combine users and groups for display
   let combinedItems = [...(groups || []), ...(allUsers || [])];
+
+  // Apply search filter if query exists
+  if (searchQuery.trim().length >= 2) {
+    combinedItems = combinedItems.filter((item) => {
+      const name = item.isGroup ? item.groupName : item.name;
+      return name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }
 
   // Sort based on last message timestamp
   combinedItems.sort((a, b) => {
