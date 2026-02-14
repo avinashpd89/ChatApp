@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/Authprovider';
 
-const publicVapidKey = "BINJ3OaiV04mbaV3ZV-h8rXQ8_dL7ic0kTyUfdk1PYTc3VaQWIVN5tJ7k8ob83cSSjO3qzlo4xZB12M9JJ1mvpg"; // Hardcoded from .env for simplicity in frontend
+const publicVapidKey = "BFMhZ9ldmjS_8OootooMRKbdnsa4CIp6RsNzLCi7zncVAqmwo2limPNUl0QM4qxE-FLv2CyWT9ISbunGhmrdv_I"; // Synced from backend .env
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);

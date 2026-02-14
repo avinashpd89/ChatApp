@@ -14,6 +14,24 @@ webpush.setVapidDetails(
     process.env.VAPID_PRIVATE_KEY
 );
 
+// Helper to extract plaintext for notification previews
+const extractPlaintext = (encryptedJson, messageType) => {
+    if (messageType !== 'text') return 'Sent an attachment';
+    try {
+        const parsed = JSON.parse(encryptedJson);
+        // Try to peek into the senderPayload which contains the base64 plaintext
+        if (parsed.senderPayload?.type === 100 && parsed.senderPayload.body) {
+            return Buffer.from(parsed.senderPayload.body, 'base64').toString('utf8');
+        }
+        // Fallback for different payload structures or if plaintext field is added for previews
+        if (parsed.plaintext) return parsed.plaintext;
+
+        return 'New message';
+    } catch (e) {
+        return encryptedJson; // Return as-is if not JSON
+    }
+};
+
 export const createGroup = async (req, res) => {
     try {
         const { groupName, members, groupProfilePic } = req.body;
@@ -130,7 +148,7 @@ export const sendMessage = async (req, res) => {
                                 try {
                                     const payload = JSON.stringify({
                                         title: conversation.groupName, // Group Name as title
-                                        body: `${req.user.fullname}: ${messageType === 'text' ? message : 'Sent an attachment'}`, // "User: Message"
+                                        body: `${req.user.fullname}: ${extractPlaintext(message, messageType)}`, // "User: Message"
                                         icon: conversation.groupProfilePic || "/vite.svg",
                                         badge: "/vite.svg", // Monochrome icon for status bar
                                         tag: conversation._id.toString(), // Group by Group ID
@@ -172,7 +190,7 @@ export const sendMessage = async (req, res) => {
                             try {
                                 const payload = JSON.stringify({
                                     title: sender ? sender.fullname : 'New Message',
-                                    body: messageType === 'text' ? message : 'Sent an attachment',
+                                    body: extractPlaintext(message, messageType),
                                     icon: (sender && sender.profilepic) || "/vite.svg",
                                     badge: "/vite.svg",
                                     tag: targetId, // Group by Sender ID (Conversation ID)
