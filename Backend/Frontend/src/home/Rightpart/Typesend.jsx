@@ -39,19 +39,30 @@ function Typesend() {
   const prevLoading = useRef(loading);
 
   // Restore focus to input ONLY after loading completes (message sent)
-  useEffect(() => {
-    if (!loading && prevLoading.current && inputRef.current) {
-      inputRef.current.focus();
-    }
-    prevLoading.current = loading;
-  }, [loading]);
+  // No longer needed: we focus immediately in handleSubmit to prevent blur
+  // useEffect(() => {
+  //   if (!loading && prevLoading.current && inputRef.current) {
+  //     inputRef.current.focus();
+  //   }
+  //   prevLoading.current = loading;
+  // }, [loading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (message.trim() === "") return;
+    if (message.trim() === "" || loading) return;
+
+    // Focus immediately before sending to ensure keyboard stays open
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+
     await sendMessages(message);
     setMessage("");
-    // Focus will be handled by the useEffect above
+
+    // Maintain focus after clear
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   const onEmojiClick = (emojiObject) => {
@@ -262,7 +273,6 @@ function Typesend() {
                   onChange={(e) => setMessage(e.target.value)}
                   className="w-full bg-transparent border-none outline-none text-base-content text-base md:text-lg 
                              placeholder-base-content/40 py-2 md:py-3 px-1"
-                  disabled={loading}
                   autoComplete="off"
                 />
               </div>
@@ -286,6 +296,7 @@ function Typesend() {
 
                 <button
                   type="submit"
+                  onMouseDown={(e) => e.preventDefault()} // Prevent stealing focus from input
                   disabled={loading || !message.trim()}
                   className={`
                     flex items-center justify-center p-3 md:p-4 rounded-xl md:rounded-2xl

@@ -5,12 +5,17 @@ import Signup from "./components/Signup";
 import Login from "./components/Login";
 import { useAuth } from "./context/Authprovider";
 import E2EEncryptionSetup from "./context/E2EEncryptionSetup";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import CallInterface from "./components/CallInterface";
 
 import { NotificationProvider } from "./context/NotificationContext";
-import OfflineMessageNotification from "./components/OfflineMessageNotification";
 import useConversation from "./zustand/useConversation";
 
 import useGetSocketMessage from "./context/useGetSocketMessage";
@@ -22,28 +27,35 @@ const NotificationHandler = () => {
   return null;
 };
 
-function App() {
-  const [authUser, setAuthUser] = useAuth();
-  const { selectedConversation, setSelectedConversation, users, groups } =
-    useConversation();
+const NavigationHandler = () => {
+  const { setSelectedConversation, users, groups } = useConversation();
+  const location = useLocation();
 
-  // Deep Linking Handler
   React.useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
+    const query = new URLSearchParams(location.search);
     const chatId = query.get("conversation");
 
-    if (chatId && (users.length > 0 || groups.length > 0)) {
-      const foundConversation =
-        users.find((u) => u._id === chatId) ||
-        groups.find((g) => g._id === chatId);
+    if (chatId) {
+      if (users.length > 0 || groups.length > 0) {
+        const foundConversation =
+          users.find((u) => u._id === chatId) ||
+          groups.find((g) => g._id === chatId);
 
-      if (foundConversation) {
-        setSelectedConversation(foundConversation);
-        // Optional: Clean URL but keep history to not break back button if needed
-        // window.history.replaceState({}, document.title, window.location.pathname);
+        if (foundConversation) {
+          setSelectedConversation(foundConversation);
+        }
       }
+    } else {
+      setSelectedConversation(null);
     }
-  }, [users, groups, setSelectedConversation]);
+  }, [location.search, users, groups, setSelectedConversation]);
+
+  return null;
+};
+
+function App() {
+  const [authUser] = useAuth();
+  const { selectedConversation } = useConversation();
 
   return (
     <>
@@ -51,6 +63,7 @@ function App() {
         <NotificationProvider>
           <NotificationHandler />
           <BrowserRouter>
+            <NavigationHandler />
             <Routes>
               <Route
                 path="/"
@@ -88,7 +101,6 @@ function App() {
               />
             </Routes>
             <CallInterface />
-            {/* <OfflineMessageNotification /> */}
           </BrowserRouter>
           <Toaster />
         </NotificationProvider>

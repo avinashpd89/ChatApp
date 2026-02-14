@@ -5,9 +5,11 @@ import Avatar from "../../assets/avatar.jpg";
 import { useNotifications } from "../../context/NotificationContext";
 import NotificationBadge from "../../components/NotificationBadge";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Authprovider";
 
 function User({ user }) {
+  const navigate = useNavigate();
   const { selectedConversation, setSelectedConversation } = useConversation();
   const isSelected = selectedConversation?._id === user._id;
   const { socket, onlineUsers } = useSocketContext();
@@ -23,7 +25,8 @@ function User({ user }) {
   const lastMsg = lastMessages?.[user._id?.toString()];
 
   const handleSelectConversation = async (selectedUser) => {
-    setSelectedConversation(selectedUser);
+    navigate(`?conversation=${selectedUser._id}`);
+    // setSelectedConversation(selectedUser); // App.jsx will handle this now via URL sync
 
     // Mark messages as read on backend
     if (unreadCount > 0 && authUser?.user?._id) {

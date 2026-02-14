@@ -13,8 +13,10 @@ import toast from "react-hot-toast";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import GroupInfoModal from "../../components/GroupInfoModal";
 import { useAuth } from "../../context/Authprovider.jsx";
+import { useNavigate } from "react-router-dom";
 
 function Chatuser() {
+  const navigate = useNavigate();
   const {
     selectedConversation,
     setSelectedConversation,
@@ -165,7 +167,7 @@ function Chatuser() {
       <div className="flex items-center justify-between h-16 bg-base-100 px-5 duration-300 border-b border-base-300/20">
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => setSelectedConversation(null)}
+            onClick={() => navigate("/")}
             className="md:hidden text-base-content mr-2">
             <IoArrowBack className="text-2xl" />
           </button>
