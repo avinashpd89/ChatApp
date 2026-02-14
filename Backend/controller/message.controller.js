@@ -157,7 +157,17 @@ export const sendMessage = async (req, res) => {
                                             chatId: conversation._id
                                         }
                                     });
-                                    await webpush.sendNotification(subscription, payload);
+
+                                    // Ensure subscription is a plain object for the web-push library
+                                    const pushSubscription = {
+                                        endpoint: subscription.endpoint,
+                                        keys: {
+                                            p256dh: subscription.keys.p256dh,
+                                            auth: subscription.keys.auth
+                                        }
+                                    };
+
+                                    await webpush.sendNotification(pushSubscription, payload);
                                 } catch (err) {
                                     console.log("Error sending push to", memberIdStr, err.message);
                                     if (err.statusCode === 410) {
@@ -199,7 +209,17 @@ export const sendMessage = async (req, res) => {
                                         chatId: targetId
                                     }
                                 });
-                                await webpush.sendNotification(subscription, payload);
+
+                                // Ensure subscription is a plain object for the web-push library
+                                const pushSubscription = {
+                                    endpoint: subscription.endpoint,
+                                    keys: {
+                                        p256dh: subscription.keys.p256dh,
+                                        auth: subscription.keys.auth
+                                    }
+                                };
+
+                                await webpush.sendNotification(pushSubscription, payload);
                             } catch (err) {
                                 console.log("Error sending push notification to", targetId, err.message);
                                 if (err.statusCode === 410) {

@@ -43,10 +43,25 @@ const useWebPush = () => {
                     console.log('No subscription detected, subscribing...');
                     await subscribe(register);
                 } else {
-                    console.log('Already subscribed');
-                    // Optionally update subscription on server ensuring it's linked to current user
-                    await sendSubscriptionToBackend(subscription);
-                    setIsSubscribed(true);
+                    // Check if the applicationServerKey matches our current key
+                    // This handles cases where VAPID keys were rotated or mismatched
+                    const currentKey = urlBase64ToUint8Array(publicVapidKey);
+
+                    // The subscription options key is an ArrayBuffer, convert to Uint8Array for comparison
+                    const existingKey = new Uint8Array(subscription.options.applicationServerKey);
+
+                    const keysMatch = currentKey.length === existingKey.length &&
+                        currentKey.every((v, i) => v === existingKey[i]);
+
+                    if (!keysMatch) {
+                        console.log('VAPID key mismatch detected, re-subscribing...');
+                        await subscription.unsubscribe();
+                        await subscribe(register);
+                    } else {
+                        console.log('Already subscribed with correct keys');
+                        await sendSubscriptionToBackend(subscription);
+                        setIsSubscribed(true);
+                    }
                 }
             } catch (err) {
                 console.error('Service Worker Registration Error:', err);
