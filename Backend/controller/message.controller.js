@@ -148,7 +148,7 @@ export const sendMessage = async (req, res) => {
                                 try {
                                     const payload = JSON.stringify({
                                         title: conversation.groupName, // Group Name as title
-                                        body: `${req.user.fullname}: ${extractPlaintext(message, messageType)}`, // "User: Message"
+                                        body: `${req.user.name}: ${extractPlaintext(message, messageType)}`, // "User: Message"
                                         icon: conversation.groupProfilePic || "/vite.svg",
                                         badge: "/vite.svg", // Monochrome icon for status bar
                                         tag: conversation._id.toString(), // Group by Group ID
@@ -195,11 +195,11 @@ export const sendMessage = async (req, res) => {
                     const subscriptions = await Subscription.find({ userId: targetId });
 
                     if (subscriptions.length > 0) {
-                        const sender = await User.findById(senderId).select("fullname profilepic");
+                        const sender = await User.findById(senderId).select("name profilepic");
                         const notificationPromises = subscriptions.map(async (subscription) => {
                             try {
                                 const payload = JSON.stringify({
-                                    title: sender ? sender.fullname : 'New Message',
+                                    title: sender ? sender.name : 'New Message',
                                     body: extractPlaintext(message, messageType),
                                     icon: (sender && sender.profilepic) || "/vite.svg",
                                     badge: "/vite.svg",

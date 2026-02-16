@@ -27,6 +27,8 @@ export const subscribeToPush = async (req, res) => {
             { upsert: true, new: true }
         );
 
+        console.log("Subscription saved/updated successfully in pushsubscriptions collection");
+
         res.status(201).json({ message: "Subscribed to push notifications", subscription: newSubscription });
 
     } catch (error) {

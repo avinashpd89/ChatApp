@@ -21,7 +21,7 @@ const subscriptionSchema = new mongoose.Schema({
             required: true
         }
     }
-}, { timestamps: true });
+}, { timestamps: true, collection: "pushsubscriptions" });
 
 // Ensure one subscription per endpoint to avoid duplicates
 subscriptionSchema.index({ endpoint: 1 }, { unique: true });
