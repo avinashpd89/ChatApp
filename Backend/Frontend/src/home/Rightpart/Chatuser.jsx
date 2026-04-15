@@ -165,7 +165,7 @@ function Chatuser() {
   return (
     <div className="relative z-50">
       <div className="flex items-center justify-between h-16 bg-base-100 px-5 duration-300 border-b border-base-300/20">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0 mr-2">
           <button
             onClick={() => navigate("/")}
             className="md:hidden text-base-content mr-2">
@@ -197,8 +197,8 @@ function Chatuser() {
               />
             </div>
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col flex-1 min-w-0">
+            <div className="flex items-center gap-2 w-full min-w-0">
               {isEditing ? (
                 <form
                   onSubmit={handleRename}
@@ -222,13 +222,18 @@ function Chatuser() {
                 </form>
               ) : (
                 <>
-                  <h1 className="text-lg md:text-xl font-normal text-base-content">
+                  <h1
+                    className={`font-normal text-base-content line-clamp-1 w-full max-w-[150px] sm:max-w-xs ${
+                      displayName?.length > 15 ? "text-sm" : "text-base md:text-lg"
+                    }`}
+                    title={displayName}
+                  >
                     {displayName}
                   </h1>
                 </>
               )}
             </div>
-            <span className="text-sm text-gray-400 hidden md:block">
+            <span className="text-sm text-gray-400 hidden md:block truncate">
               {getOnlineUsersStatus(selectedConversation._id)}
             </span>
           </div>
