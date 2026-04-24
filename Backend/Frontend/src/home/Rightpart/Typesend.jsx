@@ -7,12 +7,14 @@ import EmojiPicker from "emoji-picker-react";
 
 import { HiDocumentText } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
+import useConversation from "../../zustand/useConversation.js";
 
 function Typesend() {
   const [message, setMessage] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const [previewFile, setPreviewFile] = useState(null); // { data, type, name }
   const { loading, sendMessages } = useSendMessage();
+  const { isModalOpen } = useConversation();
   const pickerRef = useRef(null);
   const fileInputRef = useRef(null); // Ref for file input
   const [pickerWidth, setPickerWidth] = useState(350); // Default width
@@ -186,7 +188,7 @@ function Typesend() {
   }, [showPicker]);
 
   return (
-    <div className="w-full relative z-50">
+    <div className={`w-full relative z-50 ${isModalOpen ? "hidden" : ""}`}>
       {/* File Preview Modal */}
       {previewFile && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">

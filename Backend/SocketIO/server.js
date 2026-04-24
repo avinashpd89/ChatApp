@@ -42,10 +42,10 @@ io.on("connection", (socket) => {
 
     socket.on("callUser", (data) => {
         console.log("Server received callUser event:", data.from, "calling", data.userToCall);
-        const { userToCall, signalData, from, name, callType } = data;
+        const { userToCall, signalData, from, name, callType, profilepic } = data;
         if (users[userToCall]) {
             console.log("Target user found, emitting callUser to:", users[userToCall], "Type:", callType);
-            io.to(users[userToCall]).emit("callUser", { signal: signalData, from, name, callType });
+            io.to(users[userToCall]).emit("callUser", { signal: signalData, from, name, callType, profilepic });
         } else {
             console.log("Target user NOT found in users list:", userToCall);
             console.log("Current online users:", Object.keys(users));

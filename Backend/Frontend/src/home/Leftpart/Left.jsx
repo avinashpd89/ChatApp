@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Search from "./Search.jsx";
 import Users from "./Users.jsx";
-import Self from "./Self.jsx";
+import CallsHistory from "./CallsHistory.jsx";
 
 function Left() {
   const [filterType, setFilterType] = useState("all");
@@ -25,9 +25,12 @@ function Left() {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <Users filterType={filterType} searchQuery={searchQuery} />
+        {filterType === "calls" ? (
+          <CallsHistory />
+        ) : (
+          <Users filterType={filterType} searchQuery={searchQuery} />
+        )}
       </div>
-      <Self />
     </div>
   );
 }

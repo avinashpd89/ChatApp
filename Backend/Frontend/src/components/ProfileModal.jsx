@@ -7,14 +7,13 @@ const ProfileModal = ({ isOpen, onClose, user, onUpdate, onDeleteAccount }) => {
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
 
+  const [isViewingProfilePic, setIsViewingProfilePic] = useState(false);
+
   if (!isOpen) return null;
 
   const handleImageChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      /* if (selectedFile.size > 5 * 1024 * 1024) {
-        return toast.error("File size too large (max 5MB)");
-      } */
       setFile(selectedFile);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -29,42 +28,45 @@ const ProfileModal = ({ isOpen, onClose, user, onUpdate, onDeleteAccount }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl w-full max-w-md p-6 relative animate-fade-in-up">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-300">
-          ✕
-        </button>
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
+        <div className="bg-base-100 rounded-lg shadow-xl w-full max-w-md p-6 relative animate-fade-in-up">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-300">
+            ✕
+          </button>
 
-        <h2 className="text-2xl font-bold text-center mb-6 text-base-content">
-          Edit Profile
-        </h2>
+          <h2 className="text-2xl font-bold text-center mb-6 text-base-content">
+            Edit Profile
+          </h2>
 
-        <div className="flex flex-col items-center mb-6">
-          <div
-            className="relative group cursor-pointer"
-            onClick={() => fileInputRef.current.click()}>
-            <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-primary">
-              <img
-                src={profilePic}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative">
+              <div
+                className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-primary cursor-pointer transition-transform hover:scale-105"
+                onClick={() => setIsViewingProfilePic(true)}>
+                <img
+                  src={profilePic}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <button
+                onClick={() => fileInputRef.current.click()}
+                className="absolute bottom-0 right-0 bg-primary text-primary-content rounded-full p-2 shadow-lg hover:brightness-110 transition-all cursor-pointer z-10"
+                title="Change Photo">
+                <FaCamera className="text-sm" />
+              </button>
             </div>
-            <div className="absolute inset-0 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <FaCamera className="text-white text-xl" />
-            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              accept="image/*"
+              className="hidden"
+            />
           </div>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImageChange}
-            accept="image/*"
-            className="hidden"
-          />
-          <p className="text-sm text-gray-500 mt-2">Click to change photo</p>
-        </div>
 
         <div className="space-y-4">
           <div>
@@ -107,6 +109,22 @@ const ProfileModal = ({ isOpen, onClose, user, onUpdate, onDeleteAccount }) => {
         </div>
       </div>
     </div>
+
+      {isViewingProfilePic && (
+        <div
+          className="fixed inset-0 z-[100] bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center cursor-pointer"
+          onClick={() => setIsViewingProfilePic(false)}>
+          <div className="relative max-w-lg w-full p-4 flex justify-center">
+            <img
+              src={profilePic}
+              alt="My Profile"
+              className="max-w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

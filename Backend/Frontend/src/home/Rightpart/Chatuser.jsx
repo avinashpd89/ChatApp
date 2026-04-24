@@ -23,6 +23,7 @@ function Chatuser() {
     users,
     setUsers,
     setGroups,
+    setIsModalOpen,
   } = useConversation();
   const { onlineUsers } = useSocketContext();
   const [authUser] = useAuth();
@@ -38,6 +39,12 @@ function Chatuser() {
   const [activeModal, setActiveModal] = useState(null); // 'clear' or 'delete' or null
   const [isProfileViewOpen, setIsProfileViewOpen] = useState(false); // State for profile view
   const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
+
+  useEffect(() => {
+    const isAnyModalOpen = showEditModal || !!activeModal || isProfileViewOpen || isGroupInfoOpen;
+    setIsModalOpen(isAnyModalOpen);
+    return () => setIsModalOpen(false);
+  }, [showEditModal, activeModal, isProfileViewOpen, isGroupInfoOpen, setIsModalOpen]);
 
   const handleRename = async (e) => {
     e.preventDefault();

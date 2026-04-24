@@ -11,12 +11,14 @@ import { useAuth } from "./Authprovider";
 
 import toast from "react-hot-toast";
 import RingingSound from "../assets/Ringing.mp3";
+import useConversation from "../zustand/useConversation";
 
 const CallContext = createContext();
 
 export const useCall = () => useContext(CallContext);
 
 export const CallProvider = ({ children }) => {
+  const { addCallHistory } = useConversation();
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
   const [stream, setStream] = useState(null);
@@ -74,7 +76,7 @@ export const CallProvider = ({ children }) => {
   useEffect(() => {
     if (!socket) return;
 
-    const onCallUser = ({ from, name: callerName, signal, callType }) => {
+    const onCallUser = ({ from, name: callerName, signal, callType, profilepic }) => {
       console.log(
         "Client received incoming call from:",
         callerName,
@@ -82,12 +84,22 @@ export const CallProvider = ({ children }) => {
         "Type:",
         callType,
       );
+      addCallHistory({
+        id: Date.now().toString(),
+        contactId: from,
+        name: callerName,
+        profilepic: profilepic,
+        type: callType,
+        direction: "incoming",
+        timestamp: new Date().toISOString()
+      }, authUser?.user?._id);
       setCall({
         isReceivingCall: true,
         from,
         name: callerName,
         signal,
         callType,
+        profilepic,
       });
       setIsCallRejected(false);
       setCallAccepted(false);
@@ -129,6 +141,16 @@ export const CallProvider = ({ children }) => {
       console.log(
         `Received group call invitation from ${callerName} for room ${roomId}`,
       );
+      addCallHistory({
+        id: Date.now().toString(),
+        contactId: roomId,
+        name: callerName,
+        profilepic: null,
+        type: callType,
+        direction: "incoming",
+        timestamp: new Date().toISOString(),
+        isGroup: true
+      });
       setCall({
         isReceivingCall: true,
         isGroupCall: true,
@@ -348,9 +370,19 @@ export const CallProvider = ({ children }) => {
   ) => {
     // If members array is provided, this is a group call
     if (members && members.length > 0) {
-      await startGroupCall(id, name, members, video);
+      await startGroupCall(id, name, profilepic, members, video);
       return;
     }
+
+    addCallHistory({
+      id: Date.now().toString(),
+      contactId: id,
+      name,
+      profilepic,
+      type: video ? "video" : "audio",
+      direction: "outgoing",
+      timestamp: new Date().toISOString()
+    }, authUser?.user?._id);
 
     // Regular 1-to-1 call
     console.log(
@@ -385,6 +417,7 @@ export const CallProvider = ({ children }) => {
         from: socket.id,
         name: authUser?.user?.name || "Unknown",
         callType: video ? "video" : "audio",
+        profilepic: authUser?.user?.profilepic,
       });
     });
 
@@ -404,10 +437,20 @@ export const CallProvider = ({ children }) => {
     connectionRef.current = peer;
   };
 
-  const startGroupCall = async (groupId, groupName, members, video = true) => {
+  const startGroupCall = async (groupId, groupName, profilepic, members, video = true) => {
     console.log(
       `Starting group call for ${groupName}, type: ${video ? "video" : "audio"}`,
     );
+    addCallHistory({
+      id: Date.now().toString(),
+      contactId: groupId,
+      name: groupName,
+      profilepic,
+      type: video ? "video" : "audio",
+      direction: "outgoing",
+      timestamp: new Date().toISOString(),
+      isGroup: true
+    }, authUser?.user?._id);
     setIsCalling(true);
     setIsGroupCall(true);
     setGroupCallRoom(groupId);

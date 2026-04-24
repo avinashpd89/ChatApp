@@ -130,7 +130,7 @@ const CallInterface = () => {
 
       {/* ================= ACTIVE CALL ================= */}
       {callAccepted && !callEnded && (
-        <div className="w-full h-full flex flex-col p-4">
+        <div className="w-full h-full flex flex-col items-center p-4">
 
           {/* ================= GROUP CALL ================= */}
           {isGroupCall ? (
@@ -279,7 +279,7 @@ const CallInterface = () => {
               </div>
 
               {/* CONTROLS */}
-              <div className="mt-6 flex gap-6">
+              <div className="mt-6 flex justify-center gap-6">
                 <button
                   onClick={toggleMic}
                   className={`btn btn-circle btn-lg ${

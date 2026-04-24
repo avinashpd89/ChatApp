@@ -15,6 +15,15 @@ const useConversation = create(
                     } : (state.unreadCounts || {})
                 }));
             },
+            isModalOpen: false,
+            setIsModalOpen: (isOpen) => set({ isModalOpen: isOpen }),
+            callHistory: [],
+            addCallHistory: (callData, ownerId) => set((state) => ({
+                callHistory: [{ ...callData, ownerId }, ...(state.callHistory || [])]
+            })),
+            deleteCallHistory: (callId) => set((state) => ({
+                callHistory: (state.callHistory || []).filter(call => call.id !== callId)
+            })),
             message: [],
             setMessage: (message) => {
                 if (typeof message === 'function') {
@@ -71,6 +80,14 @@ const useConversation = create(
                     return { lastMessages: newLastMessages };
                 });
             },
+            clearAllData: () => set({
+                selectedConversation: null,
+                unreadCounts: {},
+                lastMessages: {},
+                users: [],
+                groups: [],
+                message: []
+            }),
         }),
         {
             name: 'chat-metadata',
@@ -79,7 +96,8 @@ const useConversation = create(
                 unreadCounts: state.unreadCounts,
                 lastMessages: state.lastMessages,
                 users: state.users,
-                groups: state.groups
+                groups: state.groups,
+                callHistory: state.callHistory
             }),
         }
     )
