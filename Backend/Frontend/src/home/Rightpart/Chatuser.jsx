@@ -33,6 +33,7 @@ function Chatuser() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const [activeModal, setActiveModal] = useState(null); // 'clear' or 'delete' or null
   const [isProfileViewOpen, setIsProfileViewOpen] = useState(false); // State for profile view
@@ -51,6 +52,7 @@ function Chatuser() {
         ),
       );
       setSelectedConversation({ ...selectedConversation, name: newName });
+      setShowEditModal(false);
       setIsEditing(false);
       toast.success("Name updated");
     } catch (error) {
@@ -199,39 +201,14 @@ function Chatuser() {
           </div>
           <div className="flex flex-col flex-1 min-w-0">
             <div className="flex items-center gap-2 w-full min-w-0">
-              {isEditing ? (
-                <form
-                  onSubmit={handleRename}
-                  className="flex items-center gap-1">
-                  <input
-                    type="text"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    className="bg-gray-700 text-white px-2 py-1 rounded-md text-sm outline-none w-24 md:w-auto"
-                    autoFocus
-                  />
-                  <button type="submit" className="text-green-500 text-sm">
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditing(false)}
-                    className="text-red-500 text-sm">
-                    Cancel
-                  </button>
-                </form>
-              ) : (
-                <>
-                  <h1
-                    className={`font-normal text-base-content line-clamp-1 w-full max-w-[150px] sm:max-w-xs ${
-                      displayName?.length > 15 ? "text-sm" : "text-base md:text-lg"
-                    }`}
-                    title={displayName}
-                  >
-                    {displayName}
-                  </h1>
-                </>
-              )}
+              <h1
+                className={`font-normal text-base-content line-clamp-1 w-full max-w-[150px] sm:max-w-xs ${
+                  displayName?.length > 15 ? "text-sm" : "text-base md:text-lg"
+                }`}
+                title={displayName}
+              >
+                {displayName}
+              </h1>
             </div>
             <span className="text-sm text-gray-400 hidden md:block truncate">
               {getOnlineUsersStatus(selectedConversation._id)}
@@ -297,8 +274,8 @@ function Chatuser() {
                 {!selectedConversation.isGroup && (
                   <button
                     onClick={() => {
-                      setIsEditing(true);
                       setNewName(selectedConversation.name);
+                      setShowEditModal(true);
                       setMenuOpen(false);
                     }}
                     className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-md text-white transition-colors">
@@ -399,6 +376,51 @@ function Chatuser() {
       />
 
       <ProfileViewOverlay />
+      
+      {/* Edit Name Modal */}
+      {showEditModal && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setShowEditModal(false)}>
+          <div
+            className="bg-base-300 w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 text-center border-b border-white/5">
+              <h3 className="font-bold text-lg mb-1">Edit Name</h3>
+              <p className="text-sm opacity-60">
+                Change the display name for this contact
+              </p>
+            </div>
+            <form onSubmit={handleRename} className="p-6 space-y-4">
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="w-full bg-base-200 text-base-content px-4 py-3 rounded-lg outline-none border border-white/5 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                placeholder="Enter new name"
+                autoFocus
+              />
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setIsEditing(false);
+                  }}
+                  className="flex-1 py-2.5 px-4 text-sm font-bold bg-base-200 hover:bg-base-300 transition-colors rounded-lg">
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 px-4 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-content transition-colors rounded-lg">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {isGroupInfoOpen && selectedConversation.isGroup && (
         <GroupInfoModal
           group={selectedConversation}

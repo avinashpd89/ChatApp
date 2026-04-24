@@ -2,11 +2,16 @@ import { useState, useRef, useEffect } from "react";
 import useDeleteMessage from "../../context/useDeleteMessage";
 import { MdDelete } from "react-icons/md";
 import { HiDocumentText } from "react-icons/hi";
+import { AiOutlineDownload } from "react-icons/ai";
 import useConversation from "../../zustand/useConversation.js";
 import Avatar from "../../assets/avatar.jpg";
+import { downloadImage, downloadVideo } from "../../utils/downloadUtils";
+import MediaViewer from "../../components/MediaViewer";
 
 function Message({ message }) {
   const [showDeleteOptions, setShowDeleteOptions] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [mediaToView, setMediaToView] = useState(null);
   const deleteMenuRef = useRef(null);
   const authUser = JSON.parse(localStorage.getItem("ChatApp"));
   const { selectedConversation } = useConversation();
@@ -146,18 +151,54 @@ function Message({ message }) {
               </div>
             ) : message.messageType === "image" &&
               message.message?.startsWith("data:image") ? (
-              <img
-                src={message.message}
-                alt="sent image"
-                className="max-w-full rounded-lg"
-              />
+              <div className="relative group/media inline-block cursor-pointer">
+                <img
+                  src={message.message}
+                  alt="sent image"
+                  className="max-w-full rounded-lg hover:opacity-90 transition-opacity"
+                  onClick={() => {
+                    setMediaToView({
+                      url: message.message,
+                      type: "image",
+                    });
+                    setViewerOpen(true);
+                  }}
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadImage(message.message);
+                  }}
+                  className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover/media:opacity-100 transition-opacity"
+                  title="Download image">
+                  <AiOutlineDownload size={20} />
+                </button>
+              </div>
             ) : message.messageType === "video" &&
               message.message?.startsWith("data:video") ? (
-              <video
-                src={message.message}
-                controls
-                className="max-w-full rounded-lg"
-              />
+              <div className="relative group/media inline-block cursor-pointer">
+                <video
+                  src={message.message}
+                  controls
+                  className="max-w-full rounded-lg hover:opacity-90 transition-opacity"
+                  onClick={() => {
+                    setMediaToView({
+                      url: message.message,
+                      type: "video",
+                    });
+                    setViewerOpen(true);
+                  }}
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadVideo(message.message);
+                  }}
+                  className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover/media:opacity-100 transition-opacity"
+                  title="Download video">
+                  <AiOutlineDownload size={20} />
+                </button>
+              </div>
             ) : message.messageType === "document" ? (
               (() => {
                 const doc = parseDocument(message.message);
@@ -245,6 +286,19 @@ function Message({ message }) {
           </div>
         </div>
       </div>
+
+      {/* Media Viewer Modal */}
+      {mediaToView && (
+        <MediaViewer
+          mediaUrl={mediaToView.url}
+          mediaType={mediaToView.type}
+          isOpen={viewerOpen}
+          onClose={() => {
+            setViewerOpen(false);
+            setMediaToView(null);
+          }}
+        />
+      )}
     </div>
   );
 }
