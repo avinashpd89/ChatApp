@@ -9,7 +9,8 @@ const io = new Server(server, {
     cors: {
         origin: [
             "https://chatapp-ryiv.onrender.com",
-            "http://localhost:3001"
+            "http://localhost:3001",
+            "https://ui-eosin-three.vercel.app"
         ],
         methods: ["GET", "POST"],
     }
