@@ -2,7 +2,13 @@ import { useEffect } from "react";
 import { AiOutlineDownload, AiOutlineClose } from "react-icons/ai";
 import { downloadImage, downloadVideo } from "../utils/downloadUtils";
 
-function MediaViewer({ mediaUrl, mediaType, isOpen, onClose }) {
+function MediaViewer({
+  mediaUrl,
+  mediaType,
+  isOpen,
+  onClose,
+  showDownload = true,
+}) {
   // Close on Escape key
   useEffect(() => {
     const handleEscape = (e) => {
@@ -60,20 +66,17 @@ function MediaViewer({ mediaUrl, mediaType, isOpen, onClose }) {
         </div>
 
         {/* Bottom Controls */}
-        <div className="w-full flex items-center justify-between gap-2 mt-3 sm:mt-4 px-2 sm:px-0">
-          {/* Info text for closing */}
-          <div className="text-white/60 text-xs sm:text-sm font-medium">
-            
-          </div>
-
+        <div className="w-full flex items-center justify-end gap-2 mt-3 sm:mt-4 px-2 sm:px-0">
           {/* Download Button */}
-          <button
-            onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-full transition-all duration-200 hover:scale-105 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-semibold whitespace-nowrap"
-            title="Download">
-            <AiOutlineDownload size={16} className="sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Download</span>
-          </button>
+          {showDownload && (
+            <button
+              onClick={handleDownload}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-full transition-all duration-200 hover:scale-105 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-semibold whitespace-nowrap"
+              title="Download">
+              <AiOutlineDownload size={16} className="sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Download</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

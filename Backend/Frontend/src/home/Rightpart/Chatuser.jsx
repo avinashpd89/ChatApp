@@ -12,6 +12,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import GroupInfoModal from "../../components/GroupInfoModal";
+import UserInfoModal from "../../components/UserInfoModal";
 import { useAuth } from "../../context/Authprovider.jsx";
 import { useNavigate } from "react-router-dom";
 
@@ -37,14 +38,14 @@ function Chatuser() {
   const [showEditModal, setShowEditModal] = useState(false);
 
   const [activeModal, setActiveModal] = useState(null); // 'clear' or 'delete' or null
-  const [isProfileViewOpen, setIsProfileViewOpen] = useState(false); // State for profile view
+  const [isUserInfoOpen, setIsUserInfoOpen] = useState(false); // State for UserInfoModal
   const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
 
   useEffect(() => {
-    const isAnyModalOpen = showEditModal || !!activeModal || isProfileViewOpen || isGroupInfoOpen;
+    const isAnyModalOpen = showEditModal || !!activeModal || isUserInfoOpen || isGroupInfoOpen;
     setIsModalOpen(isAnyModalOpen);
     return () => setIsModalOpen(false);
-  }, [showEditModal, activeModal, isProfileViewOpen, isGroupInfoOpen, setIsModalOpen]);
+  }, [showEditModal, activeModal, isUserInfoOpen, isGroupInfoOpen, setIsModalOpen]);
 
   const handleRename = async (e) => {
     e.preventDefault();
@@ -131,29 +132,6 @@ function Chatuser() {
     };
   }, [menuOpen]);
 
-  // Profile View Overlay Component
-  const ProfileViewOverlay = () => {
-    if (!isProfileViewOpen) return null;
-
-    return (
-      <div
-        className="fixed inset-0 z-[100] bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center cursor-pointer"
-        onClick={() => setIsProfileViewOpen(false)}>
-        <div className="relative max-w-lg w-full p-4">
-          <img
-            src={selectedConversation.profilepic || Avatar}
-            alt="User Profile"
-            className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl"
-            onClick={(e) => {
-              // Optional: Stop propagation if we wanted clicking image NOT to close.
-              // But requirements say "click anywhere... hide", so we let it bubble.
-            }}
-          />
-        </div>
-      </div>
-    );
-  };
-
   const getOnlineUsersStatus = (userId) => {
     if (selectedConversation.isGroup) {
       return `${selectedConversation.members?.length || 0} members`;
@@ -196,7 +174,7 @@ function Chatuser() {
                 if (selectedConversation.isGroup) {
                   setIsGroupInfoOpen(true);
                 } else {
-                  setIsProfileViewOpen(true);
+                  setIsUserInfoOpen(true);
                 }
               }}>
               <img
@@ -207,9 +185,18 @@ function Chatuser() {
             </div>
           </div>
           <div className="flex flex-col flex-1 min-w-0">
-            <div className="flex items-center gap-2 w-full min-w-0">
+            <div 
+              className="flex items-center gap-2 w-full min-w-0 cursor-pointer"
+              onClick={() => {
+                if (selectedConversation.isGroup) {
+                  setIsGroupInfoOpen(true);
+                } else {
+                  setIsUserInfoOpen(true);
+                }
+              }}
+            >
               <h1
-                className={`font-normal text-base-content line-clamp-1 w-full max-w-[150px] sm:max-w-xs ${
+                className={`font-normal text-base-content line-clamp-1 w-full max-w-[150px] sm:max-w-xs hover:text-primary transition-colors ${
                   displayName?.length > 15 ? "text-sm" : "text-base md:text-lg"
                 }`}
                 title={displayName}
@@ -382,8 +369,6 @@ function Chatuser() {
         }
       />
 
-      <ProfileViewOverlay />
-      
       {/* Edit Name Modal */}
       {showEditModal && (
         <div
@@ -432,6 +417,13 @@ function Chatuser() {
         <GroupInfoModal
           group={selectedConversation}
           onClose={() => setIsGroupInfoOpen(false)}
+        />
+      )}
+
+      {isUserInfoOpen && !selectedConversation.isGroup && (
+        <UserInfoModal
+          user={selectedConversation}
+          onClose={() => setIsUserInfoOpen(false)}
         />
       )}
 
